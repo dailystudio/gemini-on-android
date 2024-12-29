@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+	<dimen name="about_thumb_size">300dp</dimen>
+
+	<dimen name="illustration_main_height">350dp</dimen>
+	<dimen name="illustration_chat_test_width">200dp</dimen>
+	<dimen name="illustration_chat_test_height">100dp</dimen>
+	<dimen name="illustration_settings_height">200dp</dimen>
+
+	<dimen name="chat_test_send_margin_h">@dimen/default_padding</dimen>
+	<dimen name="chat_test_pick_margin_h">16dp</dimen>
+	<dimen name="chat_test_send_margin_top">8dp</dimen>
+	<dimen name="chat_test_send_margin_bottom">5dp</dimen>
+	<dimen name="chat_test_input_padding_start">30dp</dimen>
+	<dimen name="chat_test_input_padding_end">30dp</dimen>
+	<dimen name="chat_test_input_padding_end_with_file">60dp</dimen>
+
+	<dimen name="app_info_font_size">14dp</dimen>
+	<dimen name="stats_time_font_size">36dp</dimen>
+	<dimen name="stats_count_font_size">16dp</dimen>
+
+</resources>

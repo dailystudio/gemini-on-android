@@ -1,4 +1,4 @@
-package com.dailystudo.gemini.core
+package com.dailystudio.gemini.core
 
 import com.dailystudio.devbricksx.app.DevBricksApplication
 import com.dailystudio.devbricksx.development.Logger

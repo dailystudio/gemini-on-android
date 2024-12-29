@@ -1,7 +1,48 @@
 <resources>
     <string name="app_name_release">Gemini on Android</string>
-    <string name="app_name_debug">Gemini on Android (Debug)</string>
+    <string name="app_name_debug" translatable="false">@string/app_name_release</string>
+    <string name="app_desc">
+        Career Mate is an intelligent job-seeking assistant,
+        designed to provide comprehensive support throughout the job search process.
+        Utilizing AI technology, it accurately analyzes users\' resumes to create personalized career profiles,
+        covering essential details such as personal information,
+        educational background, skill strengths, and project experience.
+        \n\nWith in-depth analysis, Career Mate empowers users to stand out in the competitive job market.
+        Whether for newcomers or seasoned professionals,
+        Career Mate serves as a valuable partner in career advancement.
+        \n\nIf you have any problem, please feel free to contact this mail address:
+        \n\n
+        \t\t\tdaiystudio2010@gmail.com
+        \n\n
+    </string>
+    <string name="engine_info">Powered by %1$s</string>
 
-    <string name="hello">Hello Gemini on Android!</string>
+    <string name="title_settings">Settings</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="action_about">About</string>
+
+    <string name="label_pick">Pick a file</string>
+    <string name="label_send">Send</string>
+    <string name="label_engine_gemini">Gemini</string>
+    <string name="label_engine_vertex">Firebase Vertex</string>
+    <string name="label_engine_gemini_nano">Gemini Nano</string>
+    <string name="label_engine_gemma">Gemma 2</string>
+    <string name="label_model_gemini_1_5_flash_002">Latest stable version of Gemini 1.5 Flash</string>
+    <string name="label_model_gemini_1_5_flash_001">Initial stable version of Gemini 1.5 Flash</string>
+    <string name="label_model_gemini_1_5_pro_002">Latest stable version of Gemini 1.5 Pro</string>
+    <string name="label_model_gemini_1_5_pro_001">Initial stable version of Gemini 1.5 Pro</string>
+    <string name="label_myself">Me</string>
+    <string name="label_no_items">No items found</string>
+
+    <string name="settings_ai_engine">AI Engine</string>
+    <string name="settings_model">Gemini Model</string>
+    <string name="settings_async">Async Generation</string>
+    <string name="settings_temperature">Temperature</string>
+    <string name="settings_topK">Top-K</string>
+
+    <string name="time_stats">%1$s s</string>
+    <string name="char_stats">%1$s chars</string>
+    <string name="token_stats">%1$s tokens</string>
 
 </resources>

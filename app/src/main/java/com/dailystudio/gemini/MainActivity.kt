@@ -1,4 +1,4 @@
-package com.dailystudo.gemini
+package com.dailystudio.gemini
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle

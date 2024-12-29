@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:fitsSystemWindows="true"
+    android:clipChildren="false"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/topAppBar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize">
+
+        </com.google.android.material.appbar.MaterialToolbar>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <RelativeLayout
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:layout_marginHorizontal="@dimen/default_content_padding"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/illustration"
+            android:src="@drawable/illustration_chat_test"
+            android:scaleType="fitStart"
+            android:layout_marginTop="@dimen/default_content_padding"
+            android:layout_width="@dimen/illustration_chat_test_width"
+            android:layout_height="@dimen/illustration_chat_test_height"/>
+
+
+        <LinearLayout
+            android:id="@+id/bottom_layout"
+            android:orientation="vertical"
+            android:layout_alignParentBottom="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RelativeLayout
+                android:orientation="vertical"
+                android:paddingVertical="@dimen/default_padding"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/user_input_layout"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_centerVertical="true"
+                    app:shapeAppearance="@style/ShapeAppearance.App.SmallComponent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/user_input"
+                        android:gravity="top|start"
+                        android:inputType="textUri"
+                        android:maxLines="1"
+                        android:textColor="@color/primaryColor"
+                        android:paddingStart="@dimen/chat_test_input_padding_start"
+                        android:paddingEnd="@dimen/chat_test_input_padding_end"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/file_indicator"
+                    android:src="@drawable/ic_files"
+                    app:tint="@color/primaryColor"
+                    android:layout_alignTop="@id/user_input_layout"
+                    android:layout_alignBottom="@id/user_input_layout"
+                    android:layout_alignEnd="@id/user_input_layout"
+                    android:layout_marginEnd="@dimen/chat_test_pick_margin_h"
+                    android:layout_marginTop="@dimen/chat_test_send_margin_top"
+                    android:layout_marginBottom="@dimen/chat_test_send_margin_bottom"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/default_padding"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/pick"
+                    android:text="@string/label_pick"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="@dimen/default_padding"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/send"
+                    android:text="@string/label_send"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="@dimen/default_padding"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/chat_layout"
+            android:background="@drawable/ic_round_corner_outline"
+            android:layout_marginTop="@dimen/default_content_padding"
+            android:layout_below="@id/illustration"
+            android:layout_above="@id/bottom_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <fragment
+                android:id="@+id/fragment_engine_info"
+                android:name="com.dailystudio.gemini.fragment.EngineInfoFragment"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="@dimen/default_padding"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <ScrollView
+                android:id="@+id/scrollView"
+                android:layout_above="@id/fragment_engine_info"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/results"
+                    android:textColor="@color/primaryColor"
+                    android:padding="@dimen/default_padding"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+            </ScrollView>
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_alignParentTop="true"
+            android:layout_above="@id/chat_layout"
+            android:layout_toEndOf="@id/illustration"
+            android:layout_alignParentEnd="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/time_stats"
+                style="@style/StatsTime"
+                android:layout_weight="2"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"/>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:layout_height="0dp">
+
+                <TextView
+                    android:id="@+id/char_stats"
+                    style="@style/StatsCount"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:id="@+id/token_stats"
+                    style="@style/StatsCount"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

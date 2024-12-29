@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="Theme.GeminiOnAndroid" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.GeminiOnAndroid" parent="Theme.Material3.Light.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/primaryColor</item>
         <item name="colorPrimaryVariant">@color/primaryLightColor</item>
@@ -9,10 +9,11 @@
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/secondaryColor</item>
         <item name="colorSecondaryVariant">@color/secondaryLightColor</item>
-        <item name="colorOnSecondary">@color/primaryTextColor</item>
+        <item name="colorOnSecondary">@color/secondaryTextColor</item>
 
         <item name="appBarLayoutStyle">@style/Widget.App.AppBarLayout</item>
         <item name="toolbarStyle">@style/Widget.App.Toolbar</item>
+        <item name="chipStyle">@style/Widget.App.Chip</item>
     </style>
 
     <style name="Widget.App.AppBarLayout" parent="Widget.Material3.AppBarLayout">
@@ -38,4 +39,37 @@
         <item name="colorControlActivated">@color/white</item>
     </style>
 
+    <style name="Widget.App.Chip" parent="Widget.Material3.Chip.Suggestion">
+        <item name="chipBackgroundColor">@color/primaryColor</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:checkable">false</item>
+        <item name="chipStrokeWidth">0dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.SmallComponent</item>
+    </style>
+
+    <style name="ShapeAppearance.App.SmallComponent" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="AppInfo">
+        <item name="android:textSize">@dimen/app_info_font_size</item>
+        <item name="android:textColor">@color/primaryColor</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:padding">@dimen/default_padding</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="StatsTime">
+        <item name="android:textSize">@dimen/stats_time_font_size</item>
+        <item name="android:textColor">@color/primaryColor</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="StatsCount">
+        <item name="android:textSize">@dimen/stats_count_font_size</item>
+        <item name="android:textColor">@color/primaryColor</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:gravity">center</item>
+    </style>
 </resources>

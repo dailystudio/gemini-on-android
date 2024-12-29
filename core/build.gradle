@@ -8,7 +8,7 @@ plugins {
 
 android {
     defaultConfig {
-        namespace 'com.dailystudo.gemini.core'
+        namespace 'com.dailystudio.gemini.core'
 
         compileSdk COMPILE_SDK
 
@@ -20,6 +20,8 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
+
+        buildConfigField "String", "GEMINI_API_KEY", "\"${project.GEMINI_API_KEY}\""
     }
 
     buildTypes {
@@ -70,7 +72,26 @@ dependencies {
     /* Image & Animation */
     api("io.coil-kt:coil:${project.ext.coilVersion}")
 
-    testImplementation 'junit:junit:4.+'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    /* Gemini Google AI Client SDK */
+    api("com.google.ai.client.generativeai:generativeai:${project.ext.generativeAIVersion}")
+
+    /* Vertex AI in Firebase */
+    api ("com.google.firebase:firebase-vertexai:${project.ext.vertexAIVersion}")
+
+    /* MediaPipe */
+    api ("com.google.mediapipe:tasks-genai:${project.ext.mediaPipeGenAIVersion}")
+
+    /* AI Core */
+    api ("com.google.ai.edge.aicore:aicore:${project.ext.aicoreVersion}")
+
+    /* PDFBox */
+    api ("com.tom-roush:pdfbox-android:${project.ext.pdfBoxVersion}")
+
+    /* MLKit */
+    api ("com.google.mlkit:text-recognition:${project.ext.mlKitVersion}")
+    api ("com.google.mlkit:text-recognition-chinese:${project.ext.mlKitVersion}")
+
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 }

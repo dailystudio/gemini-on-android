@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/navi_main.xml"
+    app:startDestination="@id/chatTestFragment">
+
+    <fragment
+        android:id="@+id/chatTestFragment"
+        android:name="com.dailystudio.gemini.fragment.ChatTestFragment"
+        android:label="ChatTestFragment" >
+        <action
+            android:id="@+id/action_chatTestFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_chatTestFragment_to_aboutFragment"
+            app:destination="@id/aboutFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.dailystudio.gemini.fragment.SettingsFragmentExt"
+        android:label="SettingsFragment" />
+
+    <dialog
+        android:id="@+id/aboutFragment"
+        android:name="com.dailystudio.gemini.fragment.AboutFragment"
+        android:label="AboutFragment" />
+
+</navigation>

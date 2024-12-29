@@ -1,12 +1,19 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'androidx.navigation.safeargs.kotlin'
+
+
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
+
+    id("cn.dailystudio.devbricksx.devkit") version "$devkit_version"
 }
 
 android {
     defaultConfig {
-        applicationId "com.dailystudo.gemini"
-        namespace "com.dailystudo.gemini"
+        applicationId "com.dailystudio.gemini"
+        namespace "com.dailystudio.gemini"
 
 
         compileSdk COMPILE_SDK
@@ -19,31 +26,10 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
-
-    signingConfigs {
-
-        release {
-            storeFile file(RELEASE_STORE_FILE)
-            storePassword RELEASE_STORE_PASSWORD
-            keyAlias RELEASE_KEY_ALIAS
-            keyPassword RELEASE_KEY_PASSWORD
-        }
-
-        debug {
-            storeFile file(DEBUG_STORE_FILE)
-            storePassword DEBUG_STORE_PASSWORD
-            keyAlias DEBUG_KEY_ALIAS
-            keyPassword DEBUG_KEY_PASSWORD
-        }
-
-    }
-
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-
-            signingConfig signingConfigs.release
         }
 
         releaseUnsigned {
@@ -58,7 +44,6 @@ android {
             applicationIdSuffix '.dev'
 
             debuggable true
-            signingConfig signingConfigs.debug
             versionNameSuffix " (DEBUG)"
         }
     }
@@ -77,10 +62,15 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
+    implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+    implementation "io.noties.markwon:core:${project.ext.markdownVersion}"
+    implementation "io.noties.markwon:html:${project.ext.markdownVersion}"
+    implementation "io.noties.markwon:ext-tables:${project.ext.markdownVersion}"
 
     implementation project(":core")
 
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 }

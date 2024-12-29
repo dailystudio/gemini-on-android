@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.dailystudo.gemini">
+    package="com.dailystudio.gemini">
 
     <application
-        android:name=".core.GeminiOnAndroidApplication"
+        android:name="com.dailystudio.gemini.core.GeminiOnAndroidApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -13,7 +13,7 @@
 
         <activity
             android:exported="true"
-            android:name="com.dailystudo.gemini.MainActivity">
+            android:name="com.dailystudio.gemini.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
