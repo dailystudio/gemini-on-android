@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name_release">Gemini on Android</string>
+    <string name="app_name_debug">Gemini on Android (Debug)</string>
+
+    <string name="hello">Hello Gemini on Android!</string>
+
+</resources>
