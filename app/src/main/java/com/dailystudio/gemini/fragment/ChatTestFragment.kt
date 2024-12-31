@@ -23,7 +23,7 @@ import com.dailystudio.gemini.R
 import com.dailystudio.gemini.core.AppSettingsPrefs
 import com.dailystudio.gemini.core.R as coreR
 import com.dailystudio.gemini.core.model.AIEngine
-import com.dailystudio.gemini.core.model.ResumeViewModel
+import com.dailystudio.gemini.core.model.ChatViewModel
 import com.dailystudio.gemini.core.model.UiStatus
 import com.dailystudio.gemini.utils.CustomFontTagHandler
 import com.dailystudio.gemini.utils.DotsLoader
@@ -34,6 +34,7 @@ import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.devbricksx.fragment.AbsPermissionsFragment
 import com.dailystudio.devbricksx.utils.ResourcesCompatUtils
 import com.dailystudio.gemini.core.getAIEngine
+import com.dailystudio.gemini.core.model.UiState
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import io.noties.markwon.ext.tables.TablePlugin
@@ -57,7 +58,7 @@ class ChatTestFragment: AbsPermissionsFragment() {
     private var pickedUri: Uri? = null
     private var pickedMimiType: String? = null
 
-    private lateinit var resumeViewModel: ResumeViewModel
+    private lateinit var chatViewModel: ChatViewModel
 
     private var oldResults: String = ""
 
@@ -82,32 +83,26 @@ class ChatTestFragment: AbsPermissionsFragment() {
             })
             .build();
 
-        resumeViewModel = ViewModelProvider(requireActivity())[ResumeViewModel::class.java]
-        resumeViewModel.resetState()
+        chatViewModel = ViewModelProvider(requireActivity())[ChatViewModel::class.java]
+        chatViewModel.resetState()
 
         engine = AppSettingsPrefs.instance.getAIEngine()
         Logger.debug("chat with engine: $engine")
 
+/*
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                Logger.debug("[MODEL] in fragment prefsChanges: ${AppSettingsPrefs.instance.prefsChanges}")
                 AppSettingsPrefs.instance.prefsChanges.collectLatest {
                     syncStatsViews()
                 }
             }
         }
+*/
 
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                resumeViewModel.prepareRepos(arrayOf(engine))
-                resumeViewModel.readyOfRepos[engine]?.collect { ready ->
-                    checkSendAvailability()
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                resumeViewModel.uiState.collect { uiState ->
+                chatViewModel.uiState.collect { uiState ->
                     Logger.debug("[$engine]: resp text = ${uiState.fullResp}")
 
                     checkSendAvailability()
@@ -201,13 +196,13 @@ class ChatTestFragment: AbsPermissionsFragment() {
             appendResults(null)
 
             if (AppSettingsPrefs.instance.asyncGeneration) {
-                resumeViewModel.generateAsync(
+                chatViewModel.generateAsync(
                     userInput?.text.toString(),
                     pickedUri?.toString(),
                     pickedMimiType,
                     engine = engine)
             } else {
-                resumeViewModel.generate(
+                chatViewModel.generate(
                     userInput?.text.toString(),
                     pickedUri?.toString(),
                     pickedMimiType,
@@ -304,9 +299,11 @@ class ChatTestFragment: AbsPermissionsFragment() {
         }
 
     private fun checkSendAvailability() {
+        Logger.debug("[MODEL] checkSendAvailability: ${chatViewModel.uiState.value} ")
+
         val hasContent = !userInput?.text.isNullOrEmpty()
-        val modelReady = resumeViewModel.readyOfRepos[engine]?.value ?: false
-        val notRunning = resumeViewModel.uiState.value.status != UiStatus.InProgress
+        val modelReady = chatViewModel.uiState.value.status != UiStatus.Preparing
+        val notRunning = chatViewModel.uiState.value.status != UiStatus.InProgress
 
         sendButton?.isEnabled = hasContent && modelReady && notRunning
     }
@@ -367,7 +364,6 @@ class ChatTestFragment: AbsPermissionsFragment() {
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
     }
-
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {

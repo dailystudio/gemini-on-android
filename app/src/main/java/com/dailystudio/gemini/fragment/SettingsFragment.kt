@@ -7,19 +7,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.SwitchCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.dailystudio.gemini.R
 import com.dailystudio.gemini.core.AppSettings
 import com.dailystudio.gemini.core.AppSettingsPrefs
 import com.dailystudio.gemini.core.R as coreR
 import com.dailystudio.gemini.core.model.AIEngine
-import com.dailystudio.gemini.core.model.ResumeViewModel
 import com.dailystudio.gemini.utils.changeTitle
 import com.dailystudio.gemini.utils.registerActionBar
-import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.devbricksx.fragment.DevBricksFragment
 import com.dailystudio.devbricksx.settings.AbsSetting
 import com.dailystudio.devbricksx.settings.AbsSettingsFragment
@@ -30,8 +24,6 @@ import com.dailystudio.devbricksx.settings.SimpleRadioSettingItem
 import com.dailystudio.devbricksx.settings.SwitchSetting
 import com.dailystudio.devbricksx.settings.SwitchSettingLayoutHolder
 import com.dailystudio.devbricksx.utils.ResourcesCompatUtils
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 
@@ -72,38 +64,6 @@ data class ModelRadioSettingItem(private val context: Context,
 
 class SettingsFragment: AbsSettingsFragment() {
 
-    private lateinit var resumeViewModel: ResumeViewModel
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        resumeViewModel = ViewModelProvider(requireActivity())[ResumeViewModel::class.java]
-
-        lifecycleScope.launch {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                AppSettingsPrefs.instance.prefsChanges.collectLatest { pref ->
-                    Logger.debug("[MODEL] pref: key = ${pref.prefKey}")
-
-                    if (pref.prefKey == AppSettingsPrefs.PREF_MODEL) {
-                        Logger.debug("[MODEL] model changed: new = ${AppSettingsPrefs.instance.model}")
-                        val selectRepos = arrayOf(
-                            AIEngine.GEMINI,
-                            AIEngine.VERTEX
-                        )
-                        resumeViewModel.invalidateRepos(selectRepos)
-                    } else if (pref.prefKey == AppSettingsPrefs.PREF_TEMPERATURE
-                        || pref.prefKey == AppSettingsPrefs.PREF_TOP_K)  {
-                        Logger.debug("[MODEL] temperature changed: new = ${AppSettingsPrefs.instance.temperature}")
-                        Logger.debug("[MODEL] topK changed: new = ${AppSettingsPrefs.instance.topK}")
-
-                        resumeViewModel.invalidateRepos()
-                    }
-
-                }
-            }
-
-        }
-    }
     override fun createSettings(context: Context): Array<AbsSetting> {
         val engineItems = arrayOf(
             SimpleRadioSettingItem(context, AIEngine.GEMINI.toString(), coreR.string.label_engine_gemini),
