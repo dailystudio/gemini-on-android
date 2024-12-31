@@ -68,6 +68,10 @@ For questions or suggestions, feel free to reach out:
 
 - [dailystudio2010@gmail.com](mailto\:dailystudio2010@gmail.com)
 
+## Assets License
+
+Assets with the prefix _illustration_ in the directory `core/src/main/res/drawable-nodpi` use the [Vecteezy Pro License](https://support.vecteezy.com/en_us/new-vecteezy-licensing-ByHivesvt). Please ensure you have obtained the proper rights before using them, or replace them with your own assets.
+
 ## License
 
 This project is distributed under the [Apache 2.0 License](./LICENSE).
