@@ -33,8 +33,6 @@ import com.dailystudio.gemini.utils.registerActionBar
 import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.devbricksx.fragment.AbsPermissionsFragment
 import com.dailystudio.devbricksx.utils.ResourcesCompatUtils
-import com.dailystudio.gemini.core.getAIEngine
-import com.dailystudio.gemini.core.model.UiState
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import io.noties.markwon.ext.tables.TablePlugin
@@ -70,8 +68,6 @@ class ChatTestFragment: AbsPermissionsFragment() {
     private var colorAI: String = "#000"
     private var colorError: String = "#ff0000"
 
-    private var engine: AIEngine = AIEngine.GEMINI
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -86,10 +82,6 @@ class ChatTestFragment: AbsPermissionsFragment() {
         chatViewModel = ViewModelProvider(requireActivity())[ChatViewModel::class.java]
         chatViewModel.resetState()
 
-        engine = AppSettingsPrefs.instance.getAIEngine()
-        Logger.debug("chat with engine: $engine")
-
-/*
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 Logger.debug("[MODEL] in fragment prefsChanges: ${AppSettingsPrefs.instance.prefsChanges}")
@@ -98,12 +90,11 @@ class ChatTestFragment: AbsPermissionsFragment() {
                 }
             }
         }
-*/
 
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 chatViewModel.uiState.collect { uiState ->
-                    Logger.debug("[$engine]: resp text = ${uiState.fullResp}")
+                    Logger.debug("[${uiState.engine}]: resp text = ${uiState.fullResp}")
 
                     checkSendAvailability()
 
@@ -185,6 +176,7 @@ class ChatTestFragment: AbsPermissionsFragment() {
         sendButton = view.findViewById(R.id.send)
         sendButton?.setOnClickListener {
             val roleSelf = getString(coreR.string.label_myself)
+            val engine = chatViewModel.uiState.value.engine
 
             oldResults += buildString {
                 append("<font color='${colorHuman}'><b>${roleSelf}:</b> ")

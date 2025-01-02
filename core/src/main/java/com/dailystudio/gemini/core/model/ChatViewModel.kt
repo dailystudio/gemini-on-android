@@ -13,15 +13,11 @@ import com.dailystudio.gemini.core.repository.GeminiNanoRepository
 import com.dailystudio.gemini.core.repository.GemmaAIRepository
 import com.dailystudio.gemini.core.repository.Status
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -72,8 +68,6 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
 
     private var engine: AIEngine = AppSettingsPrefs.instance.getAIEngine()
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default) // Scope for the shared flow
-
     init {
         viewModelScope.launch {
             prepareRepo(engine)
@@ -81,22 +75,10 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
-                Logger.debug("[MODEL] in viewmodel prefsChanges: ${AppSettingsPrefs.instance.prefsChanges}")
-
-                AppSettingsPrefs.instance.prefsChanges
-                    .onStart {
-                        Logger.debug("[Model] perf flow collection started.")
-                    }
-                    .onCompletion { cause ->
-                        if (cause == null) {
-                            Logger.debug("[Model] perf flow complete normally.")
-                        } else {
-                            Logger.debug("[Model] perf flow complete: $cause.")
-                        }
-                    }
-                    .collectLatest { it ->
+                AppSettingsPrefs.instance.prefsChanges.collectLatest { it ->
                     Logger.debug("[MODEL] pref changed: ${it.prefKey}")
                     if (it.prefKey == AppSettingsPrefs.PREF_ENGINE) {
+                        Logger.debug("[MODEL] engine changed: new = ${AppSettingsPrefs.instance.engine}")
                         val oldAIEngine = engine
                         closeRepo(oldAIEngine)
 
@@ -216,7 +198,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
         }
     }
 
-    private suspend fun bindRepo(repo: BaseAIRepository) {
+    private fun bindRepo(repo: BaseAIRepository) {
         Logger.debug("[MODEL] bind repo: $repo")
 
         viewModelScope.launch {
@@ -225,6 +207,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                 Logger.debug("[MODEL] current state: ${_uiState.value}")
 
                 _uiState.value = _uiState.value.copy(
+                    engine = engine,
                     status = if (ready) UiStatus.Idle else UiStatus.Preparing
                 )
 
