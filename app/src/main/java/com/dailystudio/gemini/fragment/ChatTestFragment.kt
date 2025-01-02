@@ -161,7 +161,6 @@ class ChatTestFragment: AbsPermissionsFragment() {
         return inflater.inflate(R.layout.fragment_chat_test, container, false)
     }
 
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -230,6 +229,11 @@ class ChatTestFragment: AbsPermissionsFragment() {
         syncLayout(false)
 
         activity?.registerActionBar(view, R.id.topAppBar)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        chatViewModel.clearRespText()
     }
 
     private fun startStats() {

@@ -116,6 +116,13 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
         _uiState.value = UiState()
     }
 
+    fun clearRespText() {
+        _uiState.value = _uiState.value.copy(
+            text = "",
+            fullResp = "",
+        )
+    }
+
     fun generate(
         prompt: String,
         fileUri: String? = null,
