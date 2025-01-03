@@ -2,14 +2,17 @@
     <string name="app_name_release">Gemini on Android</string>
     <string name="app_name_debug" translatable="false">@string/app_name_release</string>
     <string name="app_desc">
-        Career Mate is an intelligent job-seeking assistant,
-        designed to provide comprehensive support throughout the job search process.
-        Utilizing AI technology, it accurately analyzes users\' resumes to create personalized career profiles,
-        covering essential details such as personal information,
-        educational background, skill strengths, and project experience.
-        \n\nWith in-depth analysis, Career Mate empowers users to stand out in the competitive job market.
-        Whether for newcomers or seasoned professionals,
-        Career Mate serves as a valuable partner in career advancement.
+        This app uses a chat interface to showcase the integration and usage of various AI SDKs on Android,
+        including real-time interactions and performance evaluation.
+        \n\nIt demonstrates capabilities different providing a comprehensive look at Gemini technology on Android.
+        \n\n
+        · Cloud-based tasks:\n
+        \t\t1. Google AI Client SDK\n
+        \t\t2. Firebase Vertex AI\n
+        \n
+        · Edge computing:\n
+        \t\t1. Gemma 2 with MediaPipe LLM task\n
+        \t\t2. Gemini Nano with Google AI Edge SDK\n
         \n\nIf you have any problem, please feel free to contact this mail address:
         \n\n
         \t\t\tdaiystudio2010@gmail.com
