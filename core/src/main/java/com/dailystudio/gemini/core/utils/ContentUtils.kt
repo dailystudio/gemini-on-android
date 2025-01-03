@@ -39,6 +39,7 @@ object ContentUtils {
             stream?.close()
         }
     }
+
     suspend fun extractTextFromImage(imagePath: String): String? = suspendCancellableCoroutine {
         var stream: InputStream? = null
         try {
@@ -65,57 +66,6 @@ object ContentUtils {
         }
     }
 
-
-    fun pdfToBitmap(context: Context,
-                    pdfUri: Uri): Bitmap? {
-        var stream: InputStream? = null
-        var pdfDocument: PDDocument? = null
-
-        return try {
-            stream = context.contentResolver?.openInputStream(pdfUri)
-
-            stream?.let {
-                pdfDocument = PDDocument.load(it)
-                val renderer = PDFRenderer(pdfDocument)
-
-                renderer.renderImageWithDPI(0, 300f) // 300 DPI for better quality
-            }
-        } catch (e: IOException) {
-            Logger.error("failed to extract text from pdf [${pdfUri}]: $e")
-            null
-        } finally {
-            pdfDocument?.close()
-            stream?.close()
-        }
-    }
-
-    fun pdfToBitmapNative(context: Context,
-                          pdfUri: Uri): Bitmap? {
-
-        val fd: ParcelFileDescriptor? =
-            context.contentResolver.openFileDescriptor(pdfUri, "r")
-
-        return try {
-            fd?.let {
-                val pdfRenderer = PdfRenderer(fd)
-                val page = pdfRenderer.openPage(0)
-
-                val bitmap = Bitmap.createBitmap(
-                    page.width, page.height,
-                    Bitmap.Config.ARGB_8888)
-                page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT)
-                page.close()
-                pdfRenderer.close()
-
-                bitmap
-            }
-        } catch (e: IOException) {
-            Logger.error("failed to extract text from pdf [${pdfUri}]: $e")
-            null
-        } finally {
-            fd?.close()
-        }
-    }
 
     fun extractTextFromPdf(pdfPath: String): String? {
         // Using the `PdfDocument` class

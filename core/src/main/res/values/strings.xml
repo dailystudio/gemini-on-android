@@ -4,7 +4,7 @@
     <string name="app_desc">
         This app uses a chat interface to showcase the integration and usage of various AI SDKs on Android,
         including real-time interactions and performance evaluation.
-        \n\nIt demonstrates capabilities different providing a comprehensive look at Gemini technology on Android.
+        \n\nIt demonstrates capabilities of different SDKs and provides a comprehensive look at Gemini technology on Android.
         \n\n
         · Cloud-based tasks:\n
         \t\t1. Google AI Client SDK\n
@@ -13,7 +13,7 @@
         · Edge computing:\n
         \t\t1. Gemma 2 with MediaPipe LLM task\n
         \t\t2. Gemini Nano with Google AI Edge SDK\n
-        \n\nIf you have any problem, please feel free to contact this mail address:
+        \nIf you have any problem, please feel free to contact this mail address:
         \n\n
         \t\t\tdaiystudio2010@gmail.com
         \n\n
@@ -31,6 +31,7 @@
     <string name="label_engine_vertex">Firebase Vertex</string>
     <string name="label_engine_gemini_nano">Gemini Nano</string>
     <string name="label_engine_gemma">Gemma 2</string>
+    <string name="label_model_gemini_2_0_exp">Gemini 2.0 Flash (Experimental)</string>
     <string name="label_model_gemini_1_5_flash_002">Latest stable version of Gemini 1.5 Flash</string>
     <string name="label_model_gemini_1_5_flash_001">Initial stable version of Gemini 1.5 Flash</string>
     <string name="label_model_gemini_1_5_pro_002">Latest stable version of Gemini 1.5 Pro</string>

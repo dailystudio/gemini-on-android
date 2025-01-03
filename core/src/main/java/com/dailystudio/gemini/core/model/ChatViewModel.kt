@@ -12,13 +12,11 @@ import com.dailystudio.gemini.core.repository.GeminiAIRepository
 import com.dailystudio.gemini.core.repository.GeminiNanoRepository
 import com.dailystudio.gemini.core.repository.GemmaAIRepository
 import com.dailystudio.gemini.core.repository.Status
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.Serializable
@@ -74,10 +72,9 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
         }
 
         viewModelScope.launch {
-            try {
-                AppSettingsPrefs.instance.prefsChanges.collectLatest { it ->
-                    Logger.debug("[MODEL] pref changed: ${it.prefKey}")
-                    if (it.prefKey == AppSettingsPrefs.PREF_ENGINE) {
+            AppSettingsPrefs.instance.prefsChanges.collectLatest { it ->
+                when (it.prefKey) {
+                    AppSettingsPrefs.PREF_ENGINE -> {
                         Logger.debug("[MODEL] engine changed: new = ${AppSettingsPrefs.instance.engine}")
                         val oldAIEngine = engine
                         closeRepo(oldAIEngine)
@@ -85,7 +82,9 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                         engine = AppSettingsPrefs.instance.getAIEngine()
 
                         prepareRepo(engine)
-                    } else if (it.prefKey == AppSettingsPrefs.PREF_MODEL) {
+                    }
+
+                    AppSettingsPrefs.PREF_MODEL -> {
                         Logger.debug("[MODEL] model changed: new = ${AppSettingsPrefs.instance.model}")
                         when (engine) {
                             AIEngine.GEMINI, AIEngine.VERTEX -> {
@@ -94,20 +93,15 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
 
                             else -> {}
                         }
-                    } else if (it.prefKey == AppSettingsPrefs.PREF_TEMPERATURE
-                        || it.prefKey == AppSettingsPrefs.PREF_TOP_K
-                    ) {
+                    }
+
+                    AppSettingsPrefs.PREF_TEMPERATURE, AppSettingsPrefs.PREF_TOP_K -> {
                         Logger.debug("[MODEL] temperature changed: new = ${AppSettingsPrefs.instance.temperature}")
                         Logger.debug("[MODEL] topK changed: new = ${AppSettingsPrefs.instance.topK}")
 
                         invalidateRepo(engine)
                     }
                 }
-            } catch (e: CancellationException) {
-                Logger.debug("[MODEL] collect perchanges cancelled")
-            }  finally {
-                Logger.debug("[MODEL] scope is active: $isActive")
-                Logger.debug("[MODEL] scope is cancelled.")
             }
         }
     }

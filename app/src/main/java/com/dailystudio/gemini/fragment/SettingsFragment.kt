@@ -92,6 +92,8 @@ class SettingsFragment: AbsSettingsFragment() {
 
         val modelItems = arrayOf(
             ModelRadioSettingItem(context,
+                "gemini-2.0-flash-exp", coreR.string.label_model_gemini_2_0_exp),
+            ModelRadioSettingItem(context,
                 "gemini-1.5-flash-002", coreR.string.label_model_gemini_1_5_flash_002),
             ModelRadioSettingItem(context,
                 "gemini-1.5-flash-001", coreR.string.label_model_gemini_1_5_flash_001),
