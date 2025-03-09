@@ -32,6 +32,8 @@ import com.dailystudio.gemini.utils.registerActionBar
 import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.devbricksx.fragment.AbsPermissionsFragment
 import com.dailystudio.devbricksx.utils.ResourcesCompatUtils
+import com.dailystudio.gemini.core.getAIEngine
+import com.dailystudio.gemini.core.model.AIEngine
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import io.noties.markwon.ext.tables.TablePlugin
@@ -82,16 +84,48 @@ class ChatTestFragment: AbsPermissionsFragment() {
 
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                Logger.debug("[MODEL] in fragment prefsChanges: ${AppSettingsPrefs.instance.prefsChanges}")
+                chatViewModel.settingsChanged.collectLatest { changed ->
+                    Logger.debug("[MODEL] settings changed: $changed")
+
+                    if (changed) {
+                        chatViewModel.commitChanges()
+                    }
+                }
+
                 AppSettingsPrefs.instance.prefsChanges.collectLatest {
                     syncStatsViews()
+                    val engine = AppSettingsPrefs.instance.getAIEngine()
+                    when (it.prefKey) {
+                        AppSettingsPrefs.PREF_ENGINE -> {
+                            Logger.debug("[MODEL] engine changed: new = ${AppSettingsPrefs.instance.engine}")
+                            chatViewModel.setEngine(engine)
+                        }
+
+                        AppSettingsPrefs.PREF_MODEL -> {
+                            Logger.debug("[MODEL] model changed: new = ${AppSettingsPrefs.instance.model}")
+                            when (engine) {
+                                AIEngine.GEMINI, AIEngine.VERTEX -> {
+                                   chatViewModel.invalidateRepo()
+                                }
+
+                                else -> {}
+                            }
+                        }
+
+                        AppSettingsPrefs.PREF_TEMPERATURE, AppSettingsPrefs.PREF_TOP_K -> {
+                            Logger.debug("[MODEL] temperature changed: new = ${AppSettingsPrefs.instance.temperature}")
+                            Logger.debug("[MODEL] topK changed: new = ${AppSettingsPrefs.instance.topK}")
+
+                            chatViewModel.invalidateRepo()
+                        }
+                    }
                 }
             }
         }
 
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                chatViewModel.uiState.collect { uiState ->
+                chatViewModel.uiState.collectLatest { uiState ->
                     Logger.debug("[Model]: new state collected = $uiState")
                     Logger.debug("[${uiState.engine}]: resp text = ${uiState.fullResp}")
 
@@ -232,7 +266,7 @@ class ChatTestFragment: AbsPermissionsFragment() {
 
     override fun onPause() {
         super.onPause()
-        chatViewModel.clearRespText()
+//        chatViewModel.clearRespText()
     }
 
     private fun startStats() {

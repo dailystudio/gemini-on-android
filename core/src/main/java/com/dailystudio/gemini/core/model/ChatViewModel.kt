@@ -12,15 +12,17 @@ import com.dailystudio.gemini.core.repository.GeminiAIRepository
 import com.dailystudio.gemini.core.repository.GeminiNanoRepository
 import com.dailystudio.gemini.core.repository.GemmaAIRepository
 import com.dailystudio.gemini.core.repository.Status
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.Serializable
 
 enum class AIEngine: Serializable {
@@ -64,6 +66,11 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
 
     private var repo: BaseAIRepository? = null
     private var repoJob: Job? = null
+
+    private var settingChanges: MutableSet<String> = mutableSetOf()
+    private var _settingsChanged: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val settingsChanged: StateFlow<Boolean> = _settingsChanged.asStateFlow()
+
     init {
         viewModelScope.launch {
             engine.collectLatest { engine ->
@@ -83,32 +90,60 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
 
         viewModelScope.launch {
             AppSettingsPrefs.instance.prefsChanges.collectLatest { it ->
-                when (it.prefKey) {
-                    AppSettingsPrefs.PREF_ENGINE -> {
-                        Logger.debug("[MODEL] engine changed: new = ${AppSettingsPrefs.instance.engine}")
-                        engine.value = AppSettingsPrefs.instance.getAIEngine()
-                    }
+                Logger.debug("[MODEL]: marking change key: ${it.prefKey}")
+                markSettingChange(it.prefKey)
+            }
+        }
+    }
 
-                    AppSettingsPrefs.PREF_MODEL -> {
-                        Logger.debug("[MODEL] model changed: new = ${AppSettingsPrefs.instance.model}")
-                        when (engine.value) {
-                            AIEngine.GEMINI, AIEngine.VERTEX -> {
-                                invalidateRepo()
-                            }
+    private fun markSettingChange(key: String) {
+        settingChanges.add(key)
+        _settingsChanged.update { true }
+    }
 
-                            else -> {}
+    fun commitChanges() {
+        var engineChanged = false
+        var repoInvalidated = false
+
+        for (key in settingChanges) {
+            when (key) {
+                AppSettingsPrefs.PREF_ENGINE -> {
+                    Logger.debug("[MODEL] engine changed: new = ${AppSettingsPrefs.instance.engine}")
+                    engineChanged = true
+                }
+
+                AppSettingsPrefs.PREF_MODEL -> {
+                    Logger.debug("[MODEL] model changed: new = ${AppSettingsPrefs.instance.model}")
+                    when (engine.value) {
+                        AIEngine.GEMINI, AIEngine.VERTEX -> {
+                            repoInvalidated = true
                         }
-                    }
 
-                    AppSettingsPrefs.PREF_TEMPERATURE, AppSettingsPrefs.PREF_TOP_K -> {
-                        Logger.debug("[MODEL] temperature changed: new = ${AppSettingsPrefs.instance.temperature}")
-                        Logger.debug("[MODEL] topK changed: new = ${AppSettingsPrefs.instance.topK}")
-
-                        invalidateRepo()
+                        else -> {}
                     }
+                }
+
+                AppSettingsPrefs.PREF_TEMPERATURE, AppSettingsPrefs.PREF_TOP_K -> {
+                    Logger.debug("[MODEL] temperature changed: new = ${AppSettingsPrefs.instance.temperature}")
+                    Logger.debug("[MODEL] topK changed: new = ${AppSettingsPrefs.instance.topK}")
+
+                    repoInvalidated = true
                 }
             }
         }
+
+        Logger.debug("[MODEL] commit change: engineChanged = $engineChanged, repoInvalidated = $repoInvalidated")
+
+        if (engineChanged) {
+            engine.value = AppSettingsPrefs.instance.getAIEngine()
+        } else if (repoInvalidated) {
+            viewModelScope.launch {
+                invalidateRepo()
+            }
+        }
+
+        settingChanges.clear()
+        _settingsChanged.update { false }
     }
 
     fun clearRespText() {
@@ -181,34 +216,34 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
         Logger.debug("[Model]: clear repo")
         super.onCleared()
 
-        closeRepo()
+        viewModelScope.launch {
+            closeRepo()
+        }
     }
 
-    private fun prepareRepo() {
+    fun setEngine(newEngine: AIEngine) {
+        engine.update { newEngine }
+    }
+
+    suspend fun invalidateRepo() {
+        closeRepo()
+        prepareRepo()
+    }
+
+    private suspend fun prepareRepo() = withContext(Dispatchers.IO) {
         Logger.debug("[MODEL: ${engine}] prepare repo in ${Thread.currentThread().name}")
 
         repo?.let {
             repoJob = createRepoJob(it)
-            viewModelScope.launch(Dispatchers.IO) {
-                it.checkAndPrepare()
-            }
+            it.checkAndPrepare()
         }
     }
 
-    private fun invalidateRepo() {
-        closeRepo()
-    }
+    private suspend fun closeRepo() = withContext(Dispatchers.IO) {
+        Logger.debug("[MODEL: ${engine}] close repo in ${Thread.currentThread().name}")
 
-    private fun closeRepo() {
-        repo?.let {
-            viewModelScope.launch (Dispatchers.IO) {
-                Logger.debug("[MODEL: ${engine}] close repo in ${Thread.currentThread().name}")
-
-                it.close()
-            }
-        }
-
-        repoJob?.cancel()
+        repo?.close()
+        repoJob?.cancelAndJoin()
     }
 
     private fun createRepoJob(repo: BaseAIRepository): Job? {

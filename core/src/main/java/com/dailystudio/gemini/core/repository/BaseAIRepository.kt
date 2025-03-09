@@ -161,4 +161,5 @@ abstract class BaseAIRepository(
         Logger.debug("closing ai repository: ${this.javaClass.simpleName}")
         setReady(false)
     }
+
 }

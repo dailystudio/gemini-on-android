@@ -39,7 +39,7 @@ class GemmaAIRepository(
                 .setModelPath(MODEL_PATH)
 //                .setTemperature(AppSettingsPrefs.instance.temperature)
 //                .setMaxTopK(AppSettingsPrefs.instance.topK)
-                .setMaxTokens(9999)
+//                .setMaxTokens(8192)
                 .setResultListener { partialResult, done ->
                     Logger.debug("new partial result: $done")
 
@@ -75,6 +75,7 @@ class GemmaAIRepository(
         fileUri: String?,
         mimeType: String?
     ) {
+        Logger.debug("[MODEL]: streaming for prompt: $prompt")
         llmInference?.generateResponseAsync(buildContent(
             prompt = prompt,
             fileUri = fileUri,
