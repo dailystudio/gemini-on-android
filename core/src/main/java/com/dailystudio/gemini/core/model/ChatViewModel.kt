@@ -12,13 +12,15 @@ import com.dailystudio.gemini.core.repository.GeminiAIRepository
 import com.dailystudio.gemini.core.repository.GeminiNanoRepository
 import com.dailystudio.gemini.core.repository.GemmaAIRepository
 import com.dailystudio.gemini.core.repository.Status
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.Serializable
 
 enum class AIEngine: Serializable {
@@ -53,22 +55,30 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
         val DEFAULT_AI_ENGINE = AIEngine.GEMINI_NANO
     }
 
-
-    private val repos = mapOf(
-        AIEngine.GEMINI to GeminiAIRepository(application, Dispatchers.IO),
-        AIEngine.GEMINI_NANO to GeminiNanoRepository(application, Dispatchers.IO),
-        AIEngine.VERTEX to VertexAIRepository(application, Dispatchers.IO),
-        AIEngine.GEMMA to GemmaAIRepository(application, Dispatchers.IO),
-    )
-
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
-    private var engine: AIEngine = AppSettingsPrefs.instance.getAIEngine()
+    private var engine: MutableStateFlow<AIEngine> = MutableStateFlow(
+        AppSettingsPrefs.instance.getAIEngine()
+    )
 
+    private var repo: BaseAIRepository? = null
+    private var repoJob: Job? = null
     init {
         viewModelScope.launch {
-            prepareRepo(engine)
+            engine.collectLatest { engine ->
+                Logger.debug("[MODEL]: engine changed to: $engine")
+                closeRepo()
+
+                repo = when (engine) {
+                    AIEngine.GEMINI -> GeminiAIRepository(application, Dispatchers.IO)
+                    AIEngine.GEMINI_NANO -> GeminiNanoRepository(application, Dispatchers.IO)
+                    AIEngine.VERTEX -> VertexAIRepository(application, Dispatchers.IO)
+                    AIEngine.GEMMA -> GemmaAIRepository(application, Dispatchers.IO)
+                }
+
+                prepareRepo()
+            }
         }
 
         viewModelScope.launch {
@@ -76,19 +86,14 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                 when (it.prefKey) {
                     AppSettingsPrefs.PREF_ENGINE -> {
                         Logger.debug("[MODEL] engine changed: new = ${AppSettingsPrefs.instance.engine}")
-                        val oldAIEngine = engine
-                        closeRepo(oldAIEngine)
-
-                        engine = AppSettingsPrefs.instance.getAIEngine()
-
-                        prepareRepo(engine)
+                        engine.value = AppSettingsPrefs.instance.getAIEngine()
                     }
 
                     AppSettingsPrefs.PREF_MODEL -> {
                         Logger.debug("[MODEL] model changed: new = ${AppSettingsPrefs.instance.model}")
-                        when (engine) {
+                        when (engine.value) {
                             AIEngine.GEMINI, AIEngine.VERTEX -> {
-                                invalidateRepo(engine)
+                                invalidateRepo()
                             }
 
                             else -> {}
@@ -99,22 +104,20 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                         Logger.debug("[MODEL] temperature changed: new = ${AppSettingsPrefs.instance.temperature}")
                         Logger.debug("[MODEL] topK changed: new = ${AppSettingsPrefs.instance.topK}")
 
-                        invalidateRepo(engine)
+                        invalidateRepo()
                     }
                 }
             }
         }
     }
 
-    fun resetState() {
-        _uiState.value = UiState()
-    }
-
     fun clearRespText() {
-        _uiState.value = _uiState.value.copy(
-            text = "",
-            fullResp = "",
-        )
+        _uiState.update { currentState ->
+            currentState.copy(
+                text = "",
+                fullResp = "",
+            )
+        }
     }
 
     fun generate(
@@ -123,25 +126,31 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
         mimeType: String? = null,
         engine: AIEngine = DEFAULT_AI_ENGINE
     ) {
-        viewModelScope.launch {
-            val repo = repos[engine] ?: return@launch
+        val repo = repo ?: return
 
-            _uiState.value = _uiState.value.copy(
-                status = UiStatus.InProgress,
-                text = prompt,
-                file = fileUri,
-                mimeType = mimeType,
-                fullResp = "")
+        viewModelScope.launch {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    status = UiStatus.InProgress,
+                    text = prompt,
+                    file = fileUri,
+                    mimeType = mimeType,
+                    fullResp = ""
+                )
+            }
 
             val result = repo.generate(prompt, fileUri, mimeType)
             Logger.debug("[AI: ${engine}] generate: result len = ${result?.length ?: 0}")
 
-            _uiState.value = _uiState.value.copy(
-                status = UiStatus.Done,
-                text = prompt,
-                file = fileUri,
-                mimeType = mimeType,
-                fullResp = result ?: "")
+            _uiState.update { currentState ->
+                currentState.copy(
+                    status = UiStatus.Done,
+                    text = prompt,
+                    file = fileUri,
+                    mimeType = mimeType,
+                    fullResp = result ?: ""
+                )
+            }
         }
     }
 
@@ -151,15 +160,18 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
         mimeType: String? = null,
         engine: AIEngine = DEFAULT_AI_ENGINE
     ) {
-        viewModelScope.launch {
-            val repo = repos[engine] ?: return@launch
+        val repo = repo ?: return
 
-            _uiState.value = _uiState.value.copy(
-                status = UiStatus.InProgress,
-                text = prompt,
-                file = fileUri,
-                mimeType = mimeType,
-                fullResp = "")
+        viewModelScope.launch {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    status = UiStatus.InProgress,
+                    text = prompt,
+                    file = fileUri,
+                    mimeType = mimeType,
+                    fullResp = ""
+                )
+            }
 
             repo.generateAsync(prompt, fileUri, mimeType)
         }
@@ -169,87 +181,76 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
         Logger.debug("[Model]: clear repo")
         super.onCleared()
 
-        viewModelScope.launch {
-            closeRepos()
+        closeRepo()
+    }
+
+    private fun prepareRepo() {
+        Logger.debug("[MODEL: ${engine}] prepare repo in ${Thread.currentThread().name}")
+
+        repo?.let {
+            repoJob = createRepoJob(it)
+            viewModelScope.launch(Dispatchers.IO) {
+                it.checkAndPrepare()
+            }
         }
     }
 
-    private suspend fun invalidateRepo(repo: AIEngine) {
-        invalidateRepos(arrayOf(repo))
+    private fun invalidateRepo() {
+        closeRepo()
     }
 
-    private suspend fun invalidateRepos(selectRepos: Array<AIEngine>? = null) {
-        closeRepos(selectRepos)
+    private fun closeRepo() {
+        repo?.let {
+            viewModelScope.launch (Dispatchers.IO) {
+                Logger.debug("[MODEL: ${engine}] close repo in ${Thread.currentThread().name}")
+
+                it.close()
+            }
+        }
+
+        repoJob?.cancel()
     }
 
-    private suspend fun prepareRepo(repo: AIEngine) {
-        prepareRepos(arrayOf(repo))
-    }
+    private fun createRepoJob(repo: BaseAIRepository): Job? {
+        Logger.debug("[MODEL] create job for repo: $repo")
 
-    private suspend fun prepareRepos(selectRepos: Array<AIEngine>? = null) {
-        withContext(Dispatchers.IO) {
-            repos.forEach { (engine, repo) ->
-                if (selectRepos == null || selectRepos.contains(engine)) {
-                    Logger.debug("[MODEL: ${engine}] prepare repo")
+        return repo.let {
+            viewModelScope.launch {
+                it.ready.collect { ready ->
+                    Logger.debug("[MODEL] change ready: $ready")
+                    Logger.debug("[MODEL] current state: ${_uiState.value}")
 
-                    repo.checkAndPrepare()
-                    bindRepo(repo)
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            engine = engine.value,
+                            status = if (ready) UiStatus.Idle else UiStatus.Preparing
+                        )
+                    }
+
+                    Logger.debug("[MODEL] now state: ${_uiState.value}")
                 }
             }
-        }
-    }
 
-    private fun bindRepo(repo: BaseAIRepository) {
-        Logger.debug("[MODEL] bind repo: $repo")
+            viewModelScope.launch {
+                it.generationStream.collect { stream ->
+                    val newState = when (stream.status) {
+                        Status.DONE -> UiStatus.Done
+                        Status.ERROR -> UiStatus.Error
+                        else -> UiStatus.InProgress
+                    }
 
-        viewModelScope.launch {
-            repo.ready.collect { ready ->
-                Logger.debug("[MODEL] change ready: $ready")
-                Logger.debug("[MODEL] current state: ${_uiState.value}")
+                    val fullResp = _uiState.value.fullResp + (stream.text ?: "")
+                    Logger.debug("[AI: ${engine}] [state: $newState], resp text = $fullResp, len = ${fullResp.length}")
 
-                _uiState.value = _uiState.value.copy(
-                    engine = engine,
-                    status = if (ready) UiStatus.Idle else UiStatus.Preparing
-                )
-
-                Logger.debug("[MODEL] now state: ${_uiState.value}")
-
-            }
-        }
-
-        viewModelScope.launch {
-            repo.generationStream.collect { stream ->
-                val newState = when (stream.status) {
-                    Status.DONE -> UiStatus.Done
-                    Status.ERROR -> UiStatus.Error
-                    else -> UiStatus.InProgress
-                }
-
-                val fullResp = _uiState.value.fullResp + (stream.text ?: "")
-                Logger.debug("[AI: ${engine}] [state: $newState], resp text = $fullResp, len = ${fullResp.length}")
-
-                _uiState.value = _uiState.value.copy(
-                    engine = engine,
-                    fullResp = fullResp,
-                    status = newState,
-                    countOfChar = fullResp.length,
-                    errorMessage = stream.errorMessage
-                )
-            }
-        }
-    }
-
-    private suspend fun closeRepo(engine: AIEngine) {
-        closeRepos(arrayOf(engine))
-    }
-
-    private suspend fun closeRepos(selectRepos: Array<AIEngine>? = null) {
-        withContext(Dispatchers.IO) {
-            repos.forEach { (engine, repo) ->
-                if (selectRepos == null || selectRepos.contains(engine)) {
-                    Logger.debug("[MODEL: ${engine}] close repo")
-
-                    repo.close()
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            engine = engine.value,
+                            fullResp = fullResp,
+                            status = newState,
+                            countOfChar = fullResp.length,
+                            errorMessage = stream.errorMessage
+                        )
+                    }
                 }
             }
         }

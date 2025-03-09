@@ -22,7 +22,6 @@ import androidx.navigation.fragment.findNavController
 import com.dailystudio.gemini.R
 import com.dailystudio.gemini.core.AppSettingsPrefs
 import com.dailystudio.gemini.core.R as coreR
-import com.dailystudio.gemini.core.model.AIEngine
 import com.dailystudio.gemini.core.model.ChatViewModel
 import com.dailystudio.gemini.core.model.UiStatus
 import com.dailystudio.gemini.utils.CustomFontTagHandler
@@ -79,8 +78,7 @@ class ChatTestFragment: AbsPermissionsFragment() {
             })
             .build();
 
-        chatViewModel = ViewModelProvider(requireActivity())[ChatViewModel::class.java]
-        chatViewModel.resetState()
+        chatViewModel = ViewModelProvider(this)[ChatViewModel::class.java]
 
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -94,6 +92,7 @@ class ChatTestFragment: AbsPermissionsFragment() {
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 chatViewModel.uiState.collect { uiState ->
+                    Logger.debug("[Model]: new state collected = $uiState")
                     Logger.debug("[${uiState.engine}]: resp text = ${uiState.fullResp}")
 
                     checkSendAvailability()

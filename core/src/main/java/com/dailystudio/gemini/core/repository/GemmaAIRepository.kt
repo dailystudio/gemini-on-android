@@ -37,8 +37,8 @@ class GemmaAIRepository(
         } else {
             val options = LlmInference.LlmInferenceOptions.builder()
                 .setModelPath(MODEL_PATH)
-                .setTemperature(AppSettingsPrefs.instance.temperature)
-                .setTopK(AppSettingsPrefs.instance.topK)
+//                .setTemperature(AppSettingsPrefs.instance.temperature)
+//                .setMaxTopK(AppSettingsPrefs.instance.topK)
                 .setMaxTokens(9999)
                 .setResultListener { partialResult, done ->
                     Logger.debug("new partial result: $done")
@@ -117,7 +117,7 @@ class GemmaAIRepository(
          *    This line will cause a crash.
          *    But I believe this line will cause memory leak.
          */
-//        llmInference?.close()
+        llmInference?.close()
     }
 
 

@@ -56,18 +56,19 @@ abstract class BaseAIRepository(
             StatsUtils.measureSuspend("[AI ${this@BaseAIRepository.javaClass.simpleName}]") {
                 _generationStream.emit(
                     GenerationStream(
-                    status = Status.RUNNING
+                        status = Status.RUNNING
+                    )
                 )
-                )
+
                 try {
                     generateContent(prompt, fileUri, mimeType)
                 } catch (e: Exception) {
                     Logger.error("[AI ${this@BaseAIRepository.javaClass.simpleName}] fail to generate: ${e.message}")
                     _generationStream.emit(
                         GenerationStream(
-                        status = Status.ERROR,
-                        errorMessage = e.message
-                    )
+                            status = Status.ERROR,
+                            errorMessage = e.message
+                        )
                     )
                     null
                 }
@@ -157,6 +158,7 @@ abstract class BaseAIRepository(
     )
 
     open fun close() {
+        Logger.debug("closing ai repository: ${this.javaClass.simpleName}")
         setReady(false)
     }
 }
