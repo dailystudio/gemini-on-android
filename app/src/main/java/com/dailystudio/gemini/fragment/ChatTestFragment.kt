@@ -91,35 +91,6 @@ class ChatTestFragment: AbsPermissionsFragment() {
                         chatViewModel.commitChanges()
                     }
                 }
-
-                AppSettingsPrefs.instance.prefsChanges.collectLatest {
-                    syncStatsViews()
-                    val engine = AppSettingsPrefs.instance.getAIEngine()
-                    when (it.prefKey) {
-                        AppSettingsPrefs.PREF_ENGINE -> {
-                            Logger.debug("[MODEL] engine changed: new = ${AppSettingsPrefs.instance.engine}")
-                            chatViewModel.setEngine(engine)
-                        }
-
-                        AppSettingsPrefs.PREF_MODEL -> {
-                            Logger.debug("[MODEL] model changed: new = ${AppSettingsPrefs.instance.model}")
-                            when (engine) {
-                                AIEngine.GEMINI, AIEngine.VERTEX -> {
-                                   chatViewModel.invalidateRepo()
-                                }
-
-                                else -> {}
-                            }
-                        }
-
-                        AppSettingsPrefs.PREF_TEMPERATURE, AppSettingsPrefs.PREF_TOP_K -> {
-                            Logger.debug("[MODEL] temperature changed: new = ${AppSettingsPrefs.instance.temperature}")
-                            Logger.debug("[MODEL] topK changed: new = ${AppSettingsPrefs.instance.topK}")
-
-                            chatViewModel.invalidateRepo()
-                        }
-                    }
-                }
             }
         }
 

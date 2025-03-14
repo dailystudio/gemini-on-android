@@ -30,7 +30,7 @@
     <string name="label_engine_gemini">Gemini</string>
     <string name="label_engine_vertex">Firebase Vertex</string>
     <string name="label_engine_gemini_nano">Gemini Nano</string>
-    <string name="label_engine_gemma">Gemma 2</string>
+    <string name="label_engine_gemma">Gemma 3</string>
     <string name="label_model_gemini_2_0_exp">Gemini 2.0 Flash (Experimental)</string>
     <string name="label_model_gemini_1_5_flash_002">Latest stable version of Gemini 1.5 Flash</string>
     <string name="label_model_gemini_1_5_flash_001">Initial stable version of Gemini 1.5 Flash</string>

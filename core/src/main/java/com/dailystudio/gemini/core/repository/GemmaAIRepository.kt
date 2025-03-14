@@ -6,6 +6,7 @@ import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.gemini.core.AppSettingsPrefs
 import com.dailystudio.gemini.core.utils.ContentUtils
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
+import com.google.mediapipe.tasks.genai.llminference.LlmInferenceSession
 import kotlinx.coroutines.CoroutineDispatcher
 import java.io.File
 
@@ -17,13 +18,15 @@ class GemmaAIRepository(
     companion object {
         // NB: Make sure the filename is *unique* per model you use!
         // Weight caching is currently based on filename alone.
-        private const val MODEL_PATH = "/data/local/tmp/llm/model.bin"
+//        private const val MODEL_PATH = "/data/local/tmp/llm/model.bin"
+        private const val MODEL_PATH = "/data/local/tmp/llm/model.task"
     }
 
     private val modelExists: Boolean
         get() = File(MODEL_PATH).exists()
 
     private var llmInference: LlmInference? = null
+    private var llmSession: LlmInferenceSession? = null
 
     override fun prepare() {
         Logger.debug("[MODEL Gemma]: model = ${AppSettingsPrefs.instance.model}")
@@ -37,20 +40,31 @@ class GemmaAIRepository(
         } else {
             val options = LlmInference.LlmInferenceOptions.builder()
                 .setModelPath(MODEL_PATH)
+                .setPreferredBackend(LlmInference.Backend.CPU)
+                .setMaxTopK(32)
+                .setMaxTokens(1024)
 //                .setTemperature(AppSettingsPrefs.instance.temperature)
 //                .setMaxTopK(AppSettingsPrefs.instance.topK)
 //                .setMaxTokens(8192)
-                .setResultListener { partialResult, done ->
-                    Logger.debug("new partial result: $done")
-
-                    updateGenerationStream(
-                        text = if (done) "" else partialResult,
-                        status = if (done) Status.DONE else Status.RUNNING
-                    )
-                }
+//
+//                .setResultListener { partialResult, done ->
+//                    Logger.debug("new partial result: $done")
+//
+//                    updateGenerationStream(
+//                        text = if (done) "" else partialResult,
+//                        status = if (done) Status.DONE else Status.RUNNING
+//                    )
+//                }
                 .build()
 
             llmInference = LlmInference.createFromOptions(context, options)
+
+            val sessOptions = LlmInferenceSession.LlmInferenceSessionOptions.builder()
+                .setTopK(AppSettingsPrefs.instance.topK)
+                .setTemperature(AppSettingsPrefs.instance.temperature)
+                .build()
+
+            llmSession = LlmInferenceSession.createFromOptions(llmInference, sessOptions)
 
             true
         }
@@ -63,11 +77,12 @@ class GemmaAIRepository(
         fileUri: String?,
         mimeType: String?
     ): String? {
-        return llmInference?.generateResponse(buildContent(
+        buildContent(
             prompt = prompt,
             fileUri = fileUri,
             mimeType = mimeType
-        ))
+        )
+        return llmSession?.generateResponse()
     }
 
     override suspend fun generateContentStream(
@@ -76,16 +91,24 @@ class GemmaAIRepository(
         mimeType: String?
     ) {
         Logger.debug("[MODEL]: streaming for prompt: $prompt")
-        llmInference?.generateResponseAsync(buildContent(
+        buildContent(
             prompt = prompt,
             fileUri = fileUri,
             mimeType = mimeType
-        ))
+        )
+        llmSession?.generateResponseAsync() { partialResult, done ->
+            Logger.debug("new partial result: $done")
+
+            updateGenerationStream(
+                text = if (done) "" else partialResult,
+                status = if (done) Status.DONE else Status.RUNNING
+            )
+        }
     }
 
     private suspend fun buildContent(prompt: String,
                                      fileUri: String?,
-                                     mimeType: String?): String {
+                                     mimeType: String?) {
         val extractedContent = if (fileUri != null && !mimeType.isNullOrBlank()) {
             if (mimeType.contains("pdf")) {
                 StatsUtils.measure("PDF") {
@@ -108,7 +131,7 @@ class GemmaAIRepository(
         }
         Logger.debug("[AI] composed prompt: $composedPrompt")
 
-        return composedPrompt
+        llmSession?.addQueryChunk(composedPrompt)
     }
 
     override fun close() {
@@ -118,6 +141,8 @@ class GemmaAIRepository(
          *    This line will cause a crash.
          *    But I believe this line will cause memory leak.
          */
+
+        llmSession?.close()
         llmInference?.close()
     }
 
