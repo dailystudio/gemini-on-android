@@ -5,16 +5,18 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.dailystudio.gemini.core.repository.VertexAIRepository
 import com.dailystudio.devbricksx.development.Logger
+import com.dailystudio.devbricksx.utils.ResourcesCompatUtils
 import com.dailystudio.gemini.core.AppSettingsPrefs
+import com.dailystudio.gemini.core.R
 import com.dailystudio.gemini.core.getAIEngine
 import com.dailystudio.gemini.core.repository.BaseAIRepository
 import com.dailystudio.gemini.core.repository.GeminiAIRepository
 import com.dailystudio.gemini.core.repository.GeminiNanoRepository
 import com.dailystudio.gemini.core.repository.GemmaAIRepository
 import com.dailystudio.gemini.core.repository.Status
+import com.dailystudio.gemini.core.utils.DotsLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,19 +44,57 @@ enum class UiStatus {
 
 data class UiState(
     val engine: AIEngine = ChatViewModel.DEFAULT_AI_ENGINE,
-    val fullResp: String = "",
     val text: String? = null,
     val file: String? = null,
     val mimeType: String? = null,
+    val fullResp: String = "",
+    val oldResponses: String = "",
     val status: UiStatus = UiStatus.Preparing,
     val countOfChar: Int = 0,
     val errorMessage: String? = null,
-)
+) {
+    val conversation: String = when (status) {
+        UiStatus.Done, UiStatus.Error -> {
+            oldResponses
+        }
+        else -> {
+            buildString {
+                append(oldResponses)
+                append(fullResp)
+            }
+        }
+    }
+
+    fun appendResponse(text: String?): UiState {
+        Logger.debug("[SAVE RESP] text = [$text]")
+        return copy(
+            fullResp = fullResp + (text ?: ""),
+            countOfChar = fullResp.length,
+        )
+    }
+
+    fun commitResponses(): UiState {
+        val commitText = this.fullResp
+        Logger.debug("[COMMIT] text = [$commitText]")
+        return copy(
+            oldResponses = buildString {
+                append(oldResponses)
+                append(commitText)
+            },
+            fullResp = ""
+        )
+    }
+
+}
 
 class ChatViewModel(application: Application): AndroidViewModel(application) {
 
     companion object {
         val DEFAULT_AI_ENGINE = AIEngine.GEMINI_NANO
+
+        fun colorIntToHex(color: Int): String {
+            return String.format("#%06X", 0xFFFFFF and color)
+        }
     }
 
     private val _uiState = MutableStateFlow(UiState())
@@ -70,6 +110,18 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
     private var settingChanges: MutableSet<String> = mutableSetOf()
     private var _settingsChanged: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val settingsChanged: StateFlow<Boolean> = _settingsChanged.asStateFlow()
+
+    private val colorHuman: String =
+        colorIntToHex(ResourcesCompatUtils.getColor(application, R.color.human))
+    private val colorAI: String =
+        colorIntToHex(ResourcesCompatUtils.getColor(application, R.color.ai))
+    private val colorError: String =
+        colorIntToHex(ResourcesCompatUtils.getColor(application, R.color.error))
+
+    private val roleSelf: String =
+        application.getString(R.string.label_myself)
+
+    private val dotsLoader = DotsLoader(viewModelScope)
 
     init {
         viewModelScope.launch {
@@ -146,12 +198,38 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
         _settingsChanged.update { false }
     }
 
-    fun clearRespText() {
-        _uiState.update { currentState ->
-            currentState.copy(
-                text = "",
-                fullResp = "",
-            )
+    private fun startGeneration(prompt: String,
+                                fileUri: String? = null,
+                                mimeType: String? = null) {
+        _uiState.update {
+            it.copy(
+                status = UiStatus.InProgress,
+                text = prompt,
+                file = fileUri,
+                mimeType = mimeType,
+            ).appendResponse(buildString {
+                append("<font color='${colorHuman}'><b>${roleSelf}:</b> ")
+                append("$prompt</font>")
+                append("\n")
+                append("<font color='${colorAI}'><b>${engine.value}:</b> ")
+                append("\n")
+            }).commitResponses()
+        }
+
+        dotsLoader.startLoadingDots { dots ->
+            _uiState.update { currentState ->
+                currentState.appendResponse(dots)
+            }
+        }
+    }
+
+    private fun stopGeneration() {
+        _uiState.update {
+            it.appendResponse(buildString {
+                append("</font>")
+                append("\n")
+                append("\n")
+            }).commitResponses()
         }
     }
 
@@ -159,33 +237,25 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
         prompt: String,
         fileUri: String? = null,
         mimeType: String? = null,
-        engine: AIEngine = DEFAULT_AI_ENGINE
     ) {
         val repo = repo ?: return
 
         viewModelScope.launch {
-            _uiState.update { currentState ->
-                currentState.copy(
-                    status = UiStatus.InProgress,
-                    text = prompt,
-                    file = fileUri,
-                    mimeType = mimeType,
-                    fullResp = ""
-                )
-            }
+            startGeneration(prompt, fileUri, mimeType)
 
             val result = repo.generate(prompt, fileUri, mimeType)
             Logger.debug("[AI: ${engine}] generate: result len = ${result?.length ?: 0}")
 
-            _uiState.update { currentState ->
-                currentState.copy(
+            _uiState.update {
+                it.copy(
                     status = UiStatus.Done,
                     text = prompt,
                     file = fileUri,
                     mimeType = mimeType,
-                    fullResp = result ?: ""
-                )
+                ).appendResponse(result)
             }
+
+            stopGeneration()
         }
     }
 
@@ -193,20 +263,11 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
         prompt: String,
         fileUri: String? = null,
         mimeType: String? = null,
-        engine: AIEngine = DEFAULT_AI_ENGINE
     ) {
         val repo = repo ?: return
 
         viewModelScope.launch {
-            _uiState.update { currentState ->
-                currentState.copy(
-                    status = UiStatus.InProgress,
-                    text = prompt,
-                    file = fileUri,
-                    mimeType = mimeType,
-                    fullResp = ""
-                )
-            }
+            startGeneration(prompt, fileUri, mimeType)
 
             repo.generateAsync(prompt, fileUri, mimeType)
         }
@@ -268,23 +329,48 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
 
             viewModelScope.launch {
                 it.generationStream.collect { stream ->
-                    val newState = when (stream.status) {
+                    val status = when (stream.status) {
                         Status.DONE -> UiStatus.Done
                         Status.ERROR -> UiStatus.Error
                         else -> UiStatus.InProgress
                     }
 
-                    val fullResp = _uiState.value.fullResp + (stream.text ?: "")
-                    Logger.debug("[AI: ${engine}] [state: $newState], resp text = $fullResp, len = ${fullResp.length}")
+                    if (dotsLoader.isRunning()) {
+                        if (!stream.text.isNullOrEmpty()
+                                || status == UiStatus.Error
+                                || status == UiStatus.Done) {
+                            dotsLoader.stopLoadingDots()
+                            _uiState.update { currentState ->
+                                currentState.copy(
+                                    fullResp = "",
+                                )
+                            }
+                        }
+                    }
+
+                    val newResp = buildString {
+                        append(stream.text ?: "")
+
+                        if (status == UiStatus.Error) {
+                            Logger.debug("error: ${stream.errorMessage}")
+                            append("<font color='${colorError}'>")
+                            append(stream.errorMessage?.trim())
+                            append("</font>")
+                        }
+                    }
 
                     _uiState.update { currentState ->
                         currentState.copy(
                             engine = engine.value,
-                            fullResp = fullResp,
-                            status = newState,
-                            countOfChar = fullResp.length,
+                            status = status,
                             errorMessage = stream.errorMessage
+                        ).appendResponse(
+                            newResp
                         )
+                    }
+
+                    if (status == UiStatus.Done || status == UiStatus.Error) {
+                        stopGeneration()
                     }
                 }
             }

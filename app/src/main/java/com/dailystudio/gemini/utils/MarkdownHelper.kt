@@ -12,11 +12,6 @@ import io.noties.markwon.html.tag.SimpleTagHandler
 // Custom HTML Tag Handler for <font>
 class CustomFontTagHandler : SimpleTagHandler() {
 
-    companion object {
-        fun colorIntToHex(color: Int): String {
-            return String.format("#%06X", 0xFFFFFF and color)
-        }
-    }
     override fun supportedTags(): Collection<String> {
         return setOf("font");
     }

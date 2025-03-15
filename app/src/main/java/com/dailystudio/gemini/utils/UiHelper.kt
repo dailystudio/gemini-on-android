@@ -3,6 +3,7 @@ package com.dailystudio.gemini.utils
 import android.animation.ObjectAnimator
 import android.widget.ScrollView
 import android.widget.TextView
+import com.dailystudio.devbricksx.development.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -10,15 +11,17 @@ import kotlinx.coroutines.launch
 
 object UiHelper {
 
-    fun scrollToTextBottom(scrollView: ScrollView?, textView: TextView?) {
+    fun scrollToTextBottom(scrollView: ScrollView?, textView: TextView?, immediately: Boolean = false) {
         val tv = textView?: return
         val sv = scrollView?: return
 
         sv.post {
             val targetScrollY = tv.bottom - sv.height
+            Logger.debug("[STB]: tv.bottom(${tv.bottom}) - sv.height(${sv.height} = $targetScrollY")
+
             if (targetScrollY > 0) {
                 ObjectAnimator.ofInt(sv, "scrollY", targetScrollY).apply {
-                    duration = 200
+                    duration = if (immediately) 0 else 200
                     start()
                 }
             }

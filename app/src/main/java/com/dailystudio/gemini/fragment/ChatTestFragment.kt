@@ -25,15 +25,11 @@ import com.dailystudio.gemini.core.R as coreR
 import com.dailystudio.gemini.core.model.ChatViewModel
 import com.dailystudio.gemini.core.model.UiStatus
 import com.dailystudio.gemini.utils.CustomFontTagHandler
-import com.dailystudio.gemini.utils.DotsLoader
 import com.dailystudio.gemini.utils.TimeStats
 import com.dailystudio.gemini.utils.UiHelper
 import com.dailystudio.gemini.utils.registerActionBar
 import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.devbricksx.fragment.AbsPermissionsFragment
-import com.dailystudio.devbricksx.utils.ResourcesCompatUtils
-import com.dailystudio.gemini.core.getAIEngine
-import com.dailystudio.gemini.core.model.AIEngine
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import io.noties.markwon.ext.tables.TablePlugin
@@ -59,15 +55,9 @@ class ChatTestFragment: AbsPermissionsFragment() {
 
     private lateinit var chatViewModel: ChatViewModel
 
-    private var oldResults: String = ""
-
-    private val dotsLoader = DotsLoader(lifecycleScope)
     private val timeStats =  TimeStats(lifecycleScope)
 
     private lateinit var markdown: Markwon
-    private var colorHuman: String = "#fff"
-    private var colorAI: String = "#000"
-    private var colorError: String = "#ff0000"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,30 +92,10 @@ class ChatTestFragment: AbsPermissionsFragment() {
 
                     checkSendAvailability()
 
-                    if (uiState.fullResp.isNotEmpty()
-                        || uiState.status == UiStatus.Error) {
-                        dotsLoader.stopLoadingDots()
-                    }
-
-                    appendResults(uiState.fullResp)
+                    displayResults(uiState.conversation)
 
                     if (uiState.status == UiStatus.Done
                         || uiState.status == UiStatus.Error) {
-                        oldResults += buildString {
-                            if (uiState.status == UiStatus.Error) {
-                                Logger.debug("error: ${uiState.errorMessage}")
-                                append("<font color='${colorError}'>")
-                                append(uiState.errorMessage?.trim())
-                                append("</font>")
-                            } else {
-                                append(uiState.fullResp)
-                            }
-                            append("</font>")
-                            append("\n")
-                            append("\n")
-                        }
-
-                        appendResults(null)
 
                         stopStats()
                     }
@@ -134,7 +104,6 @@ class ChatTestFragment: AbsPermissionsFragment() {
                         coreR.string.char_stats,
                         uiState.countOfChar.toString()
                     )
-
                     tokenStatsView?.text = getString(
                         coreR.string.token_stats,
                         (uiState.countOfChar/4).toString()
@@ -142,16 +111,6 @@ class ChatTestFragment: AbsPermissionsFragment() {
                 }
             }
         }
-
-        colorHuman = CustomFontTagHandler.colorIntToHex(
-            ResourcesCompatUtils.getColor(requireContext(),
-                coreR.color.human))
-        colorAI = CustomFontTagHandler.colorIntToHex(
-            ResourcesCompatUtils.getColor(requireContext(),
-                coreR.color.ai))
-        colorError = CustomFontTagHandler.colorIntToHex(
-            ResourcesCompatUtils.getColor(requireContext(),
-                coreR.color.error))
 
         setHasOptionsMenu(true)
 
@@ -175,42 +134,30 @@ class ChatTestFragment: AbsPermissionsFragment() {
 
         resultsView = view.findViewById(R.id.results)
         scrollView = view.findViewById(R.id.scrollView)
+        scrollView?.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            Logger.debug("[STB]: scroll view layout change")
+            displayResults()
+        }
 
         sendButton = view.findViewById(R.id.send)
         sendButton?.setOnClickListener {
-            val roleSelf = getString(coreR.string.label_myself)
-            val engine = chatViewModel.uiState.value.engine
-
-            oldResults += buildString {
-                append("<font color='${colorHuman}'><b>${roleSelf}:</b> ")
-                append("${userInput?.text.toString()} </font>")
-                append("\n")
-                append("<font color='${colorAI}'><b>${engine}:</b> ")
-                append("\n")
-            }
-            appendResults(null)
 
             if (AppSettingsPrefs.instance.asyncGeneration) {
                 chatViewModel.generateAsync(
                     userInput?.text.toString(),
                     pickedUri?.toString(),
-                    pickedMimiType,
-                    engine = engine)
+                    pickedMimiType)
             } else {
                 chatViewModel.generate(
                     userInput?.text.toString(),
                     pickedUri?.toString(),
-                    pickedMimiType,
-                    engine = engine)
+                    pickedMimiType)
             }
 
             startStats()
 
             userInput?.text = null
 
-            dotsLoader.startLoadingDots {
-                appendResults(it)
-            }
         }
 
         pickButton = view.findViewById(R.id.pick)
@@ -266,19 +213,16 @@ class ChatTestFragment: AbsPermissionsFragment() {
         }
     }
 
-    private fun appendResults(text: String?) {
+    private fun displayResults(text: String? = null) {
         Logger.debug("[APPEND] text = $text")
         val textView = resultsView?: return
         val scrollView = scrollView?: return
 
-        val newText = buildString {
-            append(oldResults)
-            append(text ?: "")
+        if (!text.isNullOrEmpty()) {
+            markdown.setMarkdown(textView, text)
         }
 
-        markdown.setMarkdown(textView, newText)
-
-        UiHelper.scrollToTextBottom(scrollView, textView)
+        UiHelper.scrollToTextBottom(scrollView, textView, text.isNullOrEmpty())
     }
 
     private val pickFileLauncher =
