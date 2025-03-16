@@ -30,6 +30,7 @@ import com.dailystudio.gemini.utils.UiHelper
 import com.dailystudio.gemini.utils.registerActionBar
 import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.devbricksx.fragment.AbsPermissionsFragment
+import com.dailystudio.gemini.utils.addSoftKeyboardChangesListener
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import io.noties.markwon.ext.tables.TablePlugin
@@ -131,13 +132,13 @@ class ChatTestFragment: AbsPermissionsFragment() {
         userInput?.addTextChangedListener {
             checkSendAvailability()
         }
+        userInput?.addSoftKeyboardChangesListener { _, showKeyboard ->
+            Logger.debug("[STB] showKeyboard = $showKeyboard ")
+            scrollTextToBottom(true)
+        }
 
         resultsView = view.findViewById(R.id.results)
         scrollView = view.findViewById(R.id.scrollView)
-        scrollView?.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            Logger.debug("[STB]: scroll view layout change")
-            displayResults()
-        }
 
         sendButton = view.findViewById(R.id.send)
         sendButton?.setOnClickListener {
@@ -213,16 +214,22 @@ class ChatTestFragment: AbsPermissionsFragment() {
         }
     }
 
+    private fun scrollTextToBottom(immediately: Boolean) {
+        val textView = resultsView?: return
+        val scrollView = scrollView?: return
+
+        UiHelper.scrollToTextBottom(scrollView, textView, immediately)
+    }
+
     private fun displayResults(text: String? = null) {
         Logger.debug("[APPEND] text = $text")
         val textView = resultsView?: return
-        val scrollView = scrollView?: return
 
         if (!text.isNullOrEmpty()) {
             markdown.setMarkdown(textView, text)
         }
 
-        UiHelper.scrollToTextBottom(scrollView, textView, text.isNullOrEmpty())
+        scrollTextToBottom(false)
     }
 
     private val pickFileLauncher =
