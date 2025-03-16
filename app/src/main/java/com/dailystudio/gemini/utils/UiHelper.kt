@@ -38,7 +38,7 @@ object UiHelper {
                         start()
                     }
                 }
-            }, 200)
+            }, 100)
         }
     }
 

@@ -42,19 +42,6 @@ class GemmaAIRepository(
                 .setModelPath(MODEL_PATH)
                 .setPreferredBackend(LlmInference.Backend.CPU)
                 .setMaxTopK(32)
-                .setMaxTokens(1024)
-//                .setTemperature(AppSettingsPrefs.instance.temperature)
-//                .setMaxTopK(AppSettingsPrefs.instance.topK)
-//                .setMaxTokens(8192)
-//
-//                .setResultListener { partialResult, done ->
-//                    Logger.debug("new partial result: $done")
-//
-//                    updateGenerationStream(
-//                        text = if (done) "" else partialResult,
-//                        status = if (done) Status.DONE else Status.RUNNING
-//                    )
-//                }
                 .build()
 
             llmInference = LlmInference.createFromOptions(context, options)

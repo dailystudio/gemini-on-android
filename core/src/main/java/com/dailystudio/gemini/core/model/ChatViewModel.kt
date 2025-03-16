@@ -18,6 +18,7 @@ import com.dailystudio.gemini.core.utils.DotsLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -65,8 +66,15 @@ data class UiState(
         }
     }
 
+    fun tempResponse(text: String?): UiState {
+        Logger.debug("[TEMP RESP] fullResp = [$fullResp], text = [$text]")
+        return copy(
+            fullResp = text ?: "",
+        )
+    }
+
     fun appendResponse(text: String?): UiState {
-        Logger.debug("[SAVE RESP] text = [$text]")
+        Logger.debug("[SAVE RESP] fullResp = [$fullResp], text = [$text]")
         return copy(
             fullResp = fullResp + (text ?: ""),
             countOfChar = fullResp.length,
@@ -218,12 +226,13 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
 
         dotsLoader.startLoadingDots { dots ->
             _uiState.update { currentState ->
-                currentState.appendResponse(dots)
+                currentState.tempResponse(dots)
             }
         }
     }
 
     private fun stopGeneration() {
+        dotsLoader.stopLoadingDots()
         _uiState.update {
             it.appendResponse(buildString {
                 append("</font>")
@@ -252,6 +261,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                     text = prompt,
                     file = fileUri,
                     mimeType = mimeType,
+                    fullResp = ""
                 ).appendResponse(result)
             }
 
