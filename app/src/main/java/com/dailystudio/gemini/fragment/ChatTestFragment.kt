@@ -30,6 +30,7 @@ import com.dailystudio.gemini.utils.UiHelper
 import com.dailystudio.gemini.utils.registerActionBar
 import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.devbricksx.fragment.AbsPermissionsFragment
+import com.dailystudio.gemini.core.LT_MODEL
 import com.dailystudio.gemini.utils.addSoftKeyboardChangesListener
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
@@ -76,7 +77,7 @@ class ChatTestFragment: AbsPermissionsFragment() {
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 chatViewModel.settingsChanged.collectLatest { changed ->
-                    Logger.debug("[MODEL] settings changed: $changed")
+                    Logger.debug(LT_MODEL(),"settings changed: $changed")
 
                     if (changed) {
                         chatViewModel.commitChanges()
@@ -88,8 +89,8 @@ class ChatTestFragment: AbsPermissionsFragment() {
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 chatViewModel.uiState.collectLatest { uiState ->
-                    Logger.debug("[Model]: new state collected = $uiState")
-                    Logger.debug("[${uiState.engine}]: resp text = ${uiState.fullResp}")
+                    Logger.debug(LT_MODEL(),"new state collected = $uiState")
+                    Logger.debug(LT_MODEL(),"[${uiState.engine}]: resp text = ${uiState.fullResp}")
 
                     checkSendAvailability()
 
@@ -250,7 +251,7 @@ class ChatTestFragment: AbsPermissionsFragment() {
         }
 
     private fun checkSendAvailability() {
-        Logger.debug("[MODEL] checkSendAvailability: ${chatViewModel.uiState.value} ")
+        Logger.debug("checkSendAvailability: ${chatViewModel.uiState.value} ")
 
         val hasContent = !userInput?.text.isNullOrEmpty()
         val modelReady = chatViewModel.uiState.value.status != UiStatus.Preparing

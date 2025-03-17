@@ -4,6 +4,7 @@ import android.content.Context
 import com.dailystudio.gemini.core.utils.StatsUtils
 import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.gemini.core.AppSettingsPrefs
+import com.dailystudio.gemini.core.Constants.LT_MODEL_NANO
 import com.dailystudio.gemini.core.utils.ContentUtils
 import com.google.ai.edge.aicore.Content
 import com.google.ai.edge.aicore.GenerativeModel
@@ -20,16 +21,18 @@ class GeminiNanoRepository(
     private var model: GenerativeModel? = null
 
     override fun prepare() {
-        Logger.debug("[MODEL Gemini Nano]: model = ${AppSettingsPrefs.instance.model}")
-        Logger.debug("[MODEL Gemini Nano]: temperature = ${AppSettingsPrefs.instance.temperature}")
-        Logger.debug("[MODEL Gemini Nano]: topK = ${AppSettingsPrefs.instance.topK}")
+        Logger.debug(LT_MODEL_NANO, "model = ${AppSettingsPrefs.instance.model}")
+        Logger.debug(LT_MODEL_NANO, "temperature = ${AppSettingsPrefs.instance.temperature}")
+        Logger.debug(LT_MODEL_NANO, "topK = ${AppSettingsPrefs.instance.topK}")
+        Logger.debug(LT_MODEL_NANO, "topP = ${AppSettingsPrefs.instance.topP}")
+        Logger.debug(LT_MODEL_NANO, "maxTokens = ${AppSettingsPrefs.instance.maxTokens}")
 
         model = GenerativeModel(
             generationConfig {
                 this.context = this@GeminiNanoRepository.context
                 temperature = AppSettingsPrefs.instance.temperature
                 topK = AppSettingsPrefs.instance.topK
-                maxOutputTokens = 8192
+                maxOutputTokens = AppSettingsPrefs.instance.maxTokens
             }
         )
 
@@ -102,7 +105,6 @@ class GeminiNanoRepository(
 
         return content {
             val composedPrompt = "$extractedContent\n $prompt"
-//                Logger.debug("[AI] composed prompt: $composedPrompt")
 
             text(composedPrompt)
         }

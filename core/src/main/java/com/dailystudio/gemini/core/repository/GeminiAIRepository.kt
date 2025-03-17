@@ -6,6 +6,7 @@ import com.dailystudio.gemini.core.BuildConfig
 import com.dailystudio.gemini.core.utils.ContentUtils
 import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.gemini.core.AppSettingsPrefs
+import com.dailystudio.gemini.core.Constants.LT_MODEL_GEMINI
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.Content
 import com.google.ai.client.generativeai.type.content
@@ -22,9 +23,11 @@ class GeminiAIRepository(
     private lateinit var model: GenerativeModel
 
     override fun prepare() {
-        Logger.debug("[MODEL Gemini]: model = ${AppSettingsPrefs.instance.model}")
-        Logger.debug("[MODEL Gemini]: temperature = ${AppSettingsPrefs.instance.temperature}")
-        Logger.debug("[MODEL Gemini]: topK = ${AppSettingsPrefs.instance.topK}")
+        Logger.debug(LT_MODEL_GEMINI, "model = ${AppSettingsPrefs.instance.model}")
+        Logger.debug(LT_MODEL_GEMINI, "temperature = ${AppSettingsPrefs.instance.temperature}")
+        Logger.debug(LT_MODEL_GEMINI, "topK = ${AppSettingsPrefs.instance.topK}")
+        Logger.debug(LT_MODEL_GEMINI, "topP = ${AppSettingsPrefs.instance.topP}")
+        Logger.debug(LT_MODEL_GEMINI, "maxTokens = ${AppSettingsPrefs.instance.maxTokens}")
 
         model = GenerativeModel(
             modelName = AppSettingsPrefs.instance.model,
@@ -32,8 +35,8 @@ class GeminiAIRepository(
             generationConfig = generationConfig {
                 temperature = AppSettingsPrefs.instance.temperature
                 topK = AppSettingsPrefs.instance.topK
-                topP = 1f
-                maxOutputTokens = 8192
+                topP = AppSettingsPrefs.instance.topP
+                maxOutputTokens = AppSettingsPrefs.instance.maxTokens
             }
         )
 
@@ -71,15 +74,12 @@ class GeminiAIRepository(
                 errorMessage = it.message
                 Status.ERROR
             }
-            Logger.debug("[AI GEMINI]: status = $status, text = ")
-
             updateGenerationStream(
                 "",
                 status,
                 errorMessage
             )
         }.collect { response ->
-            Logger.debug("[AI GEMINI]: status = $status, text = ${response.text}")
             updateGenerationStream(
                 response.text,
                 status,

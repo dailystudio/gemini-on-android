@@ -13,7 +13,7 @@ class GeminiOnAndroidApplication : DevBricksApplication() {
             Stetho.initializeWithDefaults(this)
         }
 
-        Logger.info("application is running in %s mode.",
+        Logger.info("application is running in [%s] mode.",
             if (BuildConfig.DEBUG) "DEBUG" else "RELEASE")
     }
 

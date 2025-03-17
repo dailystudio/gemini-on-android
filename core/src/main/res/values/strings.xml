@@ -44,6 +44,8 @@
     <string name="settings_async">Async Generation</string>
     <string name="settings_temperature">Temperature</string>
     <string name="settings_topK">Top-K</string>
+    <string name="settings_topP">Top-P</string>
+    <string name="settings_max_tokens">Max Tokens</string>
 
     <string name="time_stats">%1$s s</string>
     <string name="char_stats">%1$s chars</string>

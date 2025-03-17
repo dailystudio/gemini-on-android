@@ -4,6 +4,7 @@ import android.content.Context
 import com.dailystudio.gemini.core.utils.StatsUtils
 import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.gemini.core.AppSettingsPrefs
+import com.dailystudio.gemini.core.Constants.LT_MODEL_GEMMA
 import com.dailystudio.gemini.core.utils.ContentUtils
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import com.google.mediapipe.tasks.genai.llminference.LlmInferenceSession
@@ -29,29 +30,32 @@ class GemmaAIRepository(
     private var llmSession: LlmInferenceSession? = null
 
     override fun prepare() {
-        Logger.debug("[MODEL Gemma]: model = ${AppSettingsPrefs.instance.model}")
-        Logger.debug("[MODEL Gemma]: temperature = ${AppSettingsPrefs.instance.temperature}")
-        Logger.debug("[MODEL Gemma]: topK = ${AppSettingsPrefs.instance.topK}")
+        Logger.debug(LT_MODEL_GEMMA, "model = ${AppSettingsPrefs.instance.model}")
+        Logger.debug(LT_MODEL_GEMMA, "temperature = ${AppSettingsPrefs.instance.temperature}")
+        Logger.debug(LT_MODEL_GEMMA, "topK = ${AppSettingsPrefs.instance.topK}")
+        Logger.debug(LT_MODEL_GEMMA, "topP = ${AppSettingsPrefs.instance.topP}")
+        Logger.debug(LT_MODEL_GEMMA, "maxTokens = ${AppSettingsPrefs.instance.maxTokens}")
 
         val ready = if (!modelExists) {
             Logger.error("GEMMA2 model not found at path: $MODEL_PATH")
 
             false
         } else {
-            val options = LlmInference.LlmInferenceOptions.builder()
+            val inferenceOptions = LlmInference.LlmInferenceOptions.builder()
                 .setModelPath(MODEL_PATH)
                 .setPreferredBackend(LlmInference.Backend.CPU)
-                .setMaxTopK(32)
+                .setMaxTokens(AppSettingsPrefs.instance.maxTokens)
                 .build()
 
-            llmInference = LlmInference.createFromOptions(context, options)
+            llmInference = LlmInference.createFromOptions(context, inferenceOptions)
 
-            val sessOptions = LlmInferenceSession.LlmInferenceSessionOptions.builder()
+            val sessionOptions = LlmInferenceSession.LlmInferenceSessionOptions.builder()
                 .setTopK(AppSettingsPrefs.instance.topK)
+                .setTopP(AppSettingsPrefs.instance.topP)
                 .setTemperature(AppSettingsPrefs.instance.temperature)
                 .build()
 
-            llmSession = LlmInferenceSession.createFromOptions(llmInference, sessOptions)
+            llmSession = LlmInferenceSession.createFromOptions(llmInference, sessionOptions)
 
             true
         }
@@ -77,15 +81,13 @@ class GemmaAIRepository(
         fileUri: String?,
         mimeType: String?
     ) {
-        Logger.debug("[MODEL]: streaming for prompt: $prompt")
+        Logger.debug(LT_MODEL_GEMMA, "streaming for prompt: $prompt")
         buildContent(
             prompt = prompt,
             fileUri = fileUri,
             mimeType = mimeType
         )
         llmSession?.generateResponseAsync() { partialResult, done ->
-            Logger.debug("new partial result: $done")
-
             updateGenerationStream(
                 text = if (done) "" else partialResult,
                 status = if (done) Status.DONE else Status.RUNNING
@@ -116,7 +118,6 @@ class GemmaAIRepository(
             append(extractedContent)
             append("\n $prompt")
         }
-        Logger.debug("[AI] composed prompt: $composedPrompt")
 
         llmSession?.addQueryChunk(composedPrompt)
     }
@@ -124,14 +125,8 @@ class GemmaAIRepository(
     override fun close() {
         super.close()
 
-        /** TODO:
-         *    This line will cause a crash.
-         *    But I believe this line will cause memory leak.
-         */
-
         llmSession?.close()
         llmInference?.close()
     }
-
 
 }

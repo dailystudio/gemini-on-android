@@ -3,6 +3,8 @@ package com.dailystudio.gemini.core.repository
 import android.content.Context
 import com.dailystudio.gemini.core.utils.StatsUtils
 import com.dailystudio.devbricksx.development.Logger
+import com.dailystudio.gemini.core.Constants
+import com.dailystudio.gemini.core.LT_MODEL
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +36,7 @@ abstract class BaseAIRepository(
 
     protected fun setReady(ready: Boolean) {
         _ready.value = ready
-        Logger.debug("[MODEL ${this.javaClass.simpleName}] AI repository ready: $ready")
+        Logger.debug(LT_MODEL(this.javaClass.simpleName), "AI repository ready: $ready")
     }
 
     protected fun isReady(): Boolean {
@@ -47,7 +49,7 @@ abstract class BaseAIRepository(
         mimeType: String? = null
     ): String? {
         if (!isReady()) {
-            Logger.warn("AI repository is NOT ready yet.")
+            Logger.warn(LT_MODEL(this.javaClass.simpleName), "AI repository is NOT ready yet.")
 
             return null
         }
@@ -63,7 +65,7 @@ abstract class BaseAIRepository(
                 try {
                     generateContent(prompt, fileUri, mimeType)
                 } catch (e: Exception) {
-                    Logger.error("[AI ${this@BaseAIRepository.javaClass.simpleName}] fail to generate: ${e.message}")
+                    Logger.error(LT_MODEL(this.javaClass.simpleName), "fail to generate: ${e.message}")
                     _generationStream.emit(
                         GenerationStream(
                             status = Status.ERROR,
@@ -83,34 +85,20 @@ abstract class BaseAIRepository(
     ) {
         Logger.debug("prompt: $prompt")
         if (!isReady()) {
-            Logger.warn("AI repository is NOT ready yet.")
+            Logger.warn(LT_MODEL(this.javaClass.simpleName), "AI repository is NOT ready yet.")
 
             return
         }
 
         withContext(dispatcher) {
-            val tag = "[AI ${this@BaseAIRepository.javaClass.simpleName}]"
-
-//            StatsUtils.startMeasurement(tag)
             _generationStream.emit(
-                GenerationStream(
-                status = Status.RUNNING
+                GenerationStream(status = Status.RUNNING)
             )
-            )
-
-//            _generationStream.map {
-//                when (it.status) {
-//                    Status.DONE, Status.ERROR -> {
-//                        StatsUtils.endMeasurement(tag)
-//                    }
-//                    else -> {}
-//                }
-//            }
 
             try {
                 generateContentStream(prompt, fileUri, mimeType)
             } catch (e: Exception) {
-                Logger.error("[AI ${this@BaseAIRepository.javaClass.simpleName}] fail to generate: ${e.message}")
+                Logger.error(LT_MODEL(this.javaClass.simpleName), "fail to generate: ${e.message}")
                 _generationStream.emit(
                     GenerationStream(
                     status = Status.ERROR,
@@ -158,7 +146,7 @@ abstract class BaseAIRepository(
     )
 
     open fun close() {
-        Logger.debug("closing ai repository: ${this.javaClass.simpleName}")
+        Logger.debug(LT_MODEL(this.javaClass.simpleName), "closing ai repository")
         setReady(false)
     }
 

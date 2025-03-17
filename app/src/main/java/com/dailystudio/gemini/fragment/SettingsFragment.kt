@@ -211,6 +211,59 @@ class SettingsFragment: AbsSettingsFragment() {
             }
         }
 
+        val topPSetting = object: SeekBarSetting(context,
+            AppSettingsPrefs.PREF_TOP_P,
+            coreR.drawable.ic_top_k,
+            coreR.string.settings_topP) {
+
+            override fun getProgress(context: Context): Float {
+                return AppSettingsPrefs.instance.topP
+            }
+
+            override fun setProgress(context: Context, progress: Float) {
+                AppSettingsPrefs.instance.topP = progress
+            }
+
+            override fun getMinValue(context: Context): Float {
+                return AppSettings.MIN_TOP_P
+            }
+
+            override fun getMaxValue(context: Context): Float {
+                return AppSettings.MAX_TOP_P
+            }
+
+            override fun getStep(context: Context): Float {
+                return AppSettings.TOP_P_STEP
+            }
+        }
+
+        val maxTokensSetting = object: SeekBarSetting(context,
+            AppSettingsPrefs.PREF_MAX_TOKENS,
+            coreR.drawable.ic_top_k,
+            coreR.string.settings_max_tokens) {
+
+            override fun getProgress(context: Context): Float {
+                return AppSettingsPrefs.instance.maxTokens.toFloat()
+            }
+
+            override fun setProgress(context: Context, progress: Float) {
+                AppSettingsPrefs.instance.maxTokens = progress.roundToInt()
+            }
+
+            override fun getMinValue(context: Context): Float {
+                return AppSettings.MIN_MAX_TOKENS.toFloat()
+            }
+
+            override fun getMaxValue(context: Context): Float {
+                return AppSettings.MAX_MAX_TOKENS.toFloat()
+            }
+
+            override fun getStep(context: Context): Float {
+                return AppSettings.MAX_TOKENS_STEP.toFloat()
+            }
+        }
+
+
         val arrayOfSettings: MutableList<AbsSetting> = mutableListOf(
             engineSetting,
             modelSetting,
@@ -220,6 +273,8 @@ class SettingsFragment: AbsSettingsFragment() {
             arrayOfSettings.add(asyncGenerationSetting)
             arrayOfSettings.add(temperatureSetting)
             arrayOfSettings.add(topKSetting)
+            arrayOfSettings.add(topPSetting)
+            arrayOfSettings.add(maxTokensSetting)
         }
 
         return arrayOfSettings.toTypedArray()

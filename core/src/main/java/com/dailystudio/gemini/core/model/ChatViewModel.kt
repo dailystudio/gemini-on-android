@@ -7,6 +7,8 @@ import com.dailystudio.gemini.core.repository.VertexAIRepository
 import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.devbricksx.utils.ResourcesCompatUtils
 import com.dailystudio.gemini.core.AppSettingsPrefs
+import com.dailystudio.gemini.core.Constants
+import com.dailystudio.gemini.core.LT_MODEL
 import com.dailystudio.gemini.core.R
 import com.dailystudio.gemini.core.getAIEngine
 import com.dailystudio.gemini.core.repository.BaseAIRepository
@@ -18,7 +20,6 @@ import com.dailystudio.gemini.core.utils.DotsLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -67,14 +68,14 @@ data class UiState(
     }
 
     fun tempResponse(text: String?): UiState {
-        Logger.debug("[TEMP RESP] fullResp = [$fullResp], text = [$text]")
+        Logger.debug(Constants.LT_RESP, "fullResp = [$fullResp], text = [$text]")
         return copy(
             fullResp = text ?: "",
         )
     }
 
     fun appendResponse(text: String?): UiState {
-        Logger.debug("[SAVE RESP] fullResp = [$fullResp], text = [$text]")
+        Logger.debug(Constants.LT_RESP, "fullResp = [$fullResp], text = [$text]")
         return copy(
             fullResp = fullResp + (text ?: ""),
             countOfChar = fullResp.length,
@@ -83,7 +84,7 @@ data class UiState(
 
     fun commitResponses(): UiState {
         val commitText = this.fullResp
-        Logger.debug("[COMMIT] text = [$commitText]")
+        Logger.debug(Constants.LT_RESP, "text = [$commitText]")
         return copy(
             oldResponses = buildString {
                 append(oldResponses)
@@ -134,7 +135,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
     init {
         viewModelScope.launch {
             engine.collectLatest { engine ->
-                Logger.debug("[MODEL]: engine changed to: $engine")
+                Logger.debug(LT_MODEL(engine.name), "engine changed to: $engine")
                 closeRepo()
 
                 repo = when (engine) {
@@ -150,7 +151,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
 
         viewModelScope.launch {
             AppSettingsPrefs.instance.prefsChanges.collectLatest { it ->
-                Logger.debug("[MODEL]: marking change key: ${it.prefKey}")
+                Logger.debug(LT_MODEL(engine.value.name), "marking change key: ${it.prefKey}")
                 markSettingChange(it.prefKey)
             }
         }
@@ -168,12 +169,12 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
         for (key in settingChanges) {
             when (key) {
                 AppSettingsPrefs.PREF_ENGINE -> {
-                    Logger.debug("[MODEL] engine changed: new = ${AppSettingsPrefs.instance.engine}")
+                    Logger.debug(LT_MODEL(engine.value.name), "engine changed: new = ${AppSettingsPrefs.instance.engine}")
                     engineChanged = true
                 }
 
                 AppSettingsPrefs.PREF_MODEL -> {
-                    Logger.debug("[MODEL] model changed: new = ${AppSettingsPrefs.instance.model}")
+                    Logger.debug(LT_MODEL(engine.value.name), "model changed: new = ${AppSettingsPrefs.instance.model}")
                     when (engine.value) {
                         AIEngine.GEMINI, AIEngine.VERTEX -> {
                             repoInvalidated = true
@@ -183,16 +184,19 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                     }
                 }
 
-                AppSettingsPrefs.PREF_TEMPERATURE, AppSettingsPrefs.PREF_TOP_K -> {
-                    Logger.debug("[MODEL] temperature changed: new = ${AppSettingsPrefs.instance.temperature}")
-                    Logger.debug("[MODEL] topK changed: new = ${AppSettingsPrefs.instance.topK}")
+                AppSettingsPrefs.PREF_TEMPERATURE, AppSettingsPrefs.PREF_TOP_K,
+                AppSettingsPrefs.PREF_TOP_P, AppSettingsPrefs.PREF_MAX_TOKENS -> {
+                    Logger.debug(LT_MODEL(), "temperature changed: new = ${AppSettingsPrefs.instance.temperature}")
+                    Logger.debug(LT_MODEL(), "topK changed: new = ${AppSettingsPrefs.instance.topK}")
+                    Logger.debug(LT_MODEL(), "topP changed: new = ${AppSettingsPrefs.instance.topP}")
+                    Logger.debug(LT_MODEL(), "maxTokens changed: new = ${AppSettingsPrefs.instance.maxTokens}")
 
                     repoInvalidated = true
                 }
             }
         }
 
-        Logger.debug("[MODEL] commit change: engineChanged = $engineChanged, repoInvalidated = $repoInvalidated")
+        Logger.debug(LT_MODEL(), "commit change: engineChanged = $engineChanged, repoInvalidated = $repoInvalidated")
 
         if (engineChanged) {
             engine.value = AppSettingsPrefs.instance.getAIEngine()
@@ -253,7 +257,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
             startGeneration(prompt, fileUri, mimeType)
 
             val result = repo.generate(prompt, fileUri, mimeType)
-            Logger.debug("[AI: ${engine}] generate: result len = ${result?.length ?: 0}")
+            Logger.debug(Constants.LT_RESP, "[AI: ${engine}] generate: result len = ${result?.length ?: 0}")
 
             _uiState.update {
                 it.copy(
@@ -284,7 +288,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
     }
 
     override fun onCleared() {
-        Logger.debug("[Model]: clear repo")
+        Logger.debug(LT_MODEL(engine.value.name), "clear repo")
         super.onCleared()
 
         viewModelScope.launch {
@@ -302,7 +306,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
     }
 
     private suspend fun prepareRepo() = withContext(Dispatchers.IO) {
-        Logger.debug("[MODEL: ${engine}] prepare repo in ${Thread.currentThread().name}")
+        Logger.debug(LT_MODEL(engine.value.name),"prepare repo in ${Thread.currentThread().name}")
 
         repo?.let {
             repoJob = createRepoJob(it)
@@ -311,20 +315,19 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
     }
 
     private suspend fun closeRepo() = withContext(Dispatchers.IO) {
-        Logger.debug("[MODEL: ${engine}] close repo in ${Thread.currentThread().name}")
+        Logger.debug(LT_MODEL(engine.value.name), "close repo in ${Thread.currentThread().name}")
 
         repo?.close()
         repoJob?.cancelAndJoin()
     }
 
     private fun createRepoJob(repo: BaseAIRepository): Job? {
-        Logger.debug("[MODEL] create job for repo: $repo")
+        Logger.debug(LT_MODEL(engine.value.name), "create job for repo: $repo")
 
         return repo.let {
             viewModelScope.launch {
                 it.ready.collect { ready ->
-                    Logger.debug("[MODEL] change ready: $ready")
-                    Logger.debug("[MODEL] current state: ${_uiState.value}")
+                    Logger.debug(LT_MODEL(engine.value.name), "change ready: $ready")
 
                     _uiState.update { currentState ->
                         currentState.copy(
@@ -332,8 +335,6 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                             status = if (ready) UiStatus.Idle else UiStatus.Preparing
                         )
                     }
-
-                    Logger.debug("[MODEL] now state: ${_uiState.value}")
                 }
             }
 

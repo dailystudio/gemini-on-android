@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.gemini.core.AppSettingsPrefs
+import com.dailystudio.gemini.core.Constants.LT_MODEL_VERTEX
 import com.dailystudio.gemini.core.utils.ContentUtils
 import com.google.firebase.Firebase
 import com.google.firebase.vertexai.GenerativeModel
@@ -23,17 +24,19 @@ class VertexAIRepository(
     private lateinit var model: GenerativeModel
 
     override fun prepare() {
-        Logger.debug("[MODEL Vertex AI]: model = ${AppSettingsPrefs.instance.model}")
-        Logger.debug("[MODEL Vertex AI]: temperature = ${AppSettingsPrefs.instance.temperature}")
-        Logger.debug("[MODEL Vertex AI]: topK = ${AppSettingsPrefs.instance.topK}")
+        Logger.debug(LT_MODEL_VERTEX, "model = ${AppSettingsPrefs.instance.model}")
+        Logger.debug(LT_MODEL_VERTEX, "temperature = ${AppSettingsPrefs.instance.temperature}")
+        Logger.debug(LT_MODEL_VERTEX, "topK = ${AppSettingsPrefs.instance.topK}")
+        Logger.debug(LT_MODEL_VERTEX, "topP = ${AppSettingsPrefs.instance.topP}")
+        Logger.debug(LT_MODEL_VERTEX, "maxTokens = ${AppSettingsPrefs.instance.maxTokens}")
 
         model = Firebase.vertexAI.generativeModel(
             modelName = AppSettingsPrefs.instance.model,
             generationConfig = generationConfig {
                 temperature = AppSettingsPrefs.instance.temperature
                 topK = AppSettingsPrefs.instance.topK
-                topP = 1f
-                maxOutputTokens = 8192
+                topP = AppSettingsPrefs.instance.topP
+                maxOutputTokens = AppSettingsPrefs.instance.maxTokens
             },
         )
 
