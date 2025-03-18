@@ -14,7 +14,7 @@ import com.dailystudio.gemini.core.getAIEngine
 import com.dailystudio.gemini.core.repository.BaseAIRepository
 import com.dailystudio.gemini.core.repository.GeminiAIRepository
 import com.dailystudio.gemini.core.repository.GeminiNanoRepository
-import com.dailystudio.gemini.core.repository.GemmaAIRepository
+import com.dailystudio.gemini.core.repository.MediaPipeAIRepository
 import com.dailystudio.gemini.core.repository.Status
 import com.dailystudio.gemini.core.utils.DotsLoader
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +33,7 @@ enum class AIEngine: Serializable {
     GEMINI,
     GEMINI_NANO,
     VERTEX,
-    GEMMA
+    MEDIA_PIPE
 }
 
 enum class UiStatus {
@@ -142,7 +142,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                     AIEngine.GEMINI -> GeminiAIRepository(application, Dispatchers.IO)
                     AIEngine.GEMINI_NANO -> GeminiNanoRepository(application, Dispatchers.IO)
                     AIEngine.VERTEX -> VertexAIRepository(application, Dispatchers.IO)
-                    AIEngine.GEMMA -> GemmaAIRepository(application, Dispatchers.IO)
+                    AIEngine.MEDIA_PIPE -> MediaPipeAIRepository(application, Dispatchers.IO)
                 }
 
                 prepareRepo()
@@ -176,7 +176,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                 AppSettingsPrefs.PREF_MODEL -> {
                     Logger.debug(LT_MODEL(engine.value.name), "model changed: new = ${AppSettingsPrefs.instance.model}")
                     when (engine.value) {
-                        AIEngine.GEMINI, AIEngine.VERTEX -> {
+                        AIEngine.GEMINI, AIEngine.VERTEX, AIEngine.MEDIA_PIPE -> {
                             repoInvalidated = true
                         }
 

@@ -53,7 +53,7 @@ data class ModelRadioSettingItem(private val context: Context,
     }
 
     override fun getLabel(): CharSequence {
-        return itemId
+        return context.getString(descResId)
     }
 
     fun getDescription(): CharSequence {
@@ -69,10 +69,12 @@ class SettingsFragment: AbsSettingsFragment() {
             SimpleRadioSettingItem(context, AIEngine.GEMINI.toString(), coreR.string.label_engine_gemini),
             SimpleRadioSettingItem(context, AIEngine.VERTEX.toString(), coreR.string.label_engine_vertex),
             SimpleRadioSettingItem(context, AIEngine.GEMINI_NANO.toString(), coreR.string.label_engine_gemini_nano),
-            SimpleRadioSettingItem(context, AIEngine.GEMMA.toString(), coreR.string.label_engine_gemma)
+            SimpleRadioSettingItem(context, AIEngine.MEDIA_PIPE.toString(), coreR.string.label_media_pipe)
         )
 
-        var modelSetting: AbsSetting? = null
+        var geminiModelSettings: AbsSetting? = null
+        var mediaPipeModelSettings: AbsSetting? = null
+
         val engineSetting = object: RadioSetting<SimpleRadioSettingItem>(
             context,
             AppSettingsPrefs.PREF_ENGINE,
@@ -85,12 +87,13 @@ class SettingsFragment: AbsSettingsFragment() {
             override fun setSelected(selectedId: String?) {
                 selectedId?.let {
                     AppSettingsPrefs.instance.engine = it
-                    modelSetting?.enabled = modelEnabled()
+                    geminiModelSettings?.enabled = geminiModelEnabled()
+                    mediaPipeModelSettings?.enabled = mediaPipeModelEnabled()
                 }
             }
         }
 
-        val modelItems = arrayOf(
+        val geminiModels = arrayOf(
             ModelRadioSettingItem(context,
                 "gemini-2.0-flash", coreR.string.label_model_gemini_2_0),
             ModelRadioSettingItem(context,
@@ -101,13 +104,38 @@ class SettingsFragment: AbsSettingsFragment() {
                 "gemini-1.5-flash", coreR.string.label_model_gemini_1_5_flash),
         )
 
-        modelSetting = object: RadioSetting<ModelRadioSettingItem>(
+        geminiModelSettings = object: RadioSetting<ModelRadioSettingItem>(
             context,
             AppSettingsPrefs.PREF_MODEL,
             coreR.drawable.ic_model,
-            coreR.string.settings_model,
-            modelItems,
-            modelEnabled(),
+            coreR.string.settings_gemini_model,
+            geminiModels,
+            geminiModelEnabled(),
+        ) {
+            override val selectedId: String?
+                get() = AppSettingsPrefs.instance.model
+
+            override fun setSelected(selectedId: String?) {
+                selectedId?.let {
+                    AppSettingsPrefs.instance.model = it
+                }
+            }
+        }
+
+        val mediaPipeModels = arrayOf(
+            ModelRadioSettingItem(context,
+                "gemma-2-2b", coreR.string.label_model_gemma_2),
+            ModelRadioSettingItem(context,
+                "gemma-3-1b", coreR.string.label_model_gemma_3),
+        )
+
+        mediaPipeModelSettings = object: RadioSetting<ModelRadioSettingItem>(
+            context,
+            AppSettingsPrefs.PREF_MODEL,
+            coreR.drawable.ic_model,
+            coreR.string.settings_media_pipe_model,
+            mediaPipeModels,
+            mediaPipeModelEnabled(),
         ) {
             override val selectedId: String?
                 get() = AppSettingsPrefs.instance.model
@@ -264,7 +292,8 @@ class SettingsFragment: AbsSettingsFragment() {
 
         val arrayOfSettings: MutableList<AbsSetting> = mutableListOf(
             engineSetting,
-            modelSetting,
+            geminiModelSettings,
+            mediaPipeModelSettings,
         )
 
         if (AppSettingsPrefs.instance.debugEnabled) {
@@ -278,9 +307,15 @@ class SettingsFragment: AbsSettingsFragment() {
         return arrayOfSettings.toTypedArray()
     }
 
-    private fun modelEnabled(): Boolean {
+    private fun geminiModelEnabled(): Boolean {
         val engine = AppSettingsPrefs.instance.engine
 
         return (engine == AIEngine.GEMINI.toString() || engine == AIEngine.VERTEX.toString())
+    }
+
+    private fun mediaPipeModelEnabled(): Boolean {
+        val engine = AppSettingsPrefs.instance.engine
+
+        return (engine == AIEngine.MEDIA_PIPE.toString())
     }
 }

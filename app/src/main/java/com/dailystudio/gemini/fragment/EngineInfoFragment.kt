@@ -63,7 +63,7 @@ class EngineInfoFragment:DevBricksFragment() {
             AIEngine.GEMINI.toString() -> getString(coreR.string.label_engine_gemini)
             AIEngine.VERTEX.toString() -> getString(coreR.string.label_engine_vertex)
             AIEngine.GEMINI_NANO.toString() -> getString(coreR.string.label_engine_gemini_nano)
-            AIEngine.GEMMA.toString() -> getString(coreR.string.label_engine_gemma)
+            AIEngine.MEDIA_PIPE.toString() -> getString(coreR.string.label_media_pipe)
             else -> null
         }
 
