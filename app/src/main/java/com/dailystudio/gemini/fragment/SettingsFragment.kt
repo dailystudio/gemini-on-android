@@ -12,8 +12,6 @@ import com.dailystudio.gemini.core.AppSettings
 import com.dailystudio.gemini.core.AppSettingsPrefs
 import com.dailystudio.gemini.core.R as coreR
 import com.dailystudio.gemini.core.model.AIEngine
-import com.dailystudio.gemini.utils.changeTitle
-import com.dailystudio.gemini.utils.registerActionBar
 import com.dailystudio.devbricksx.fragment.DevBricksFragment
 import com.dailystudio.devbricksx.settings.AbsSetting
 import com.dailystudio.devbricksx.settings.AbsSettingsFragment
@@ -24,6 +22,8 @@ import com.dailystudio.devbricksx.settings.SimpleRadioSettingItem
 import com.dailystudio.devbricksx.settings.SwitchSetting
 import com.dailystudio.devbricksx.settings.SwitchSettingLayoutHolder
 import com.dailystudio.devbricksx.utils.ResourcesCompatUtils
+import com.dailystudio.devbricksx.utils.changeTitle
+import com.dailystudio.devbricksx.utils.registerActionBar
 import kotlin.math.roundToInt
 
 
@@ -92,15 +92,13 @@ class SettingsFragment: AbsSettingsFragment() {
 
         val modelItems = arrayOf(
             ModelRadioSettingItem(context,
-                "gemini-2.0-flash-exp", coreR.string.label_model_gemini_2_0_exp),
+                "gemini-2.0-flash", coreR.string.label_model_gemini_2_0),
             ModelRadioSettingItem(context,
-                "gemini-1.5-flash-002", coreR.string.label_model_gemini_1_5_flash_002),
+                "gemini-2.0-flash-lite", coreR.string.label_model_gemini_2_0_flash_lite),
             ModelRadioSettingItem(context,
-                "gemini-1.5-flash-001", coreR.string.label_model_gemini_1_5_flash_001),
+                "gemini-1.5-pro", coreR.string.label_model_gemini_1_5_pro),
             ModelRadioSettingItem(context,
-                "gemini-1.5-pro-002", coreR.string.label_model_gemini_1_5_pro_002),
-            ModelRadioSettingItem(context,
-                "gemini-1.5-pro-001", coreR.string.label_model_gemini_1_5_pro_001),
+                "gemini-1.5-flash", coreR.string.label_model_gemini_1_5_flash),
         )
 
         modelSetting = object: RadioSetting<ModelRadioSettingItem>(
@@ -213,7 +211,7 @@ class SettingsFragment: AbsSettingsFragment() {
 
         val topPSetting = object: SeekBarSetting(context,
             AppSettingsPrefs.PREF_TOP_P,
-            coreR.drawable.ic_top_k,
+            coreR.drawable.ic_top_p,
             coreR.string.settings_topP) {
 
             override fun getProgress(context: Context): Float {
@@ -239,7 +237,7 @@ class SettingsFragment: AbsSettingsFragment() {
 
         val maxTokensSetting = object: SeekBarSetting(context,
             AppSettingsPrefs.PREF_MAX_TOKENS,
-            coreR.drawable.ic_top_k,
+            coreR.drawable.ic_tokens,
             coreR.string.settings_max_tokens) {
 
             override fun getProgress(context: Context): Float {

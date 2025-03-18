@@ -31,11 +31,10 @@
     <string name="label_engine_vertex">Firebase Vertex</string>
     <string name="label_engine_gemini_nano">Gemini Nano</string>
     <string name="label_engine_gemma">Gemma 3</string>
-    <string name="label_model_gemini_2_0_exp">Gemini 2.0 Flash (Experimental)</string>
-    <string name="label_model_gemini_1_5_flash_002">Latest stable version of Gemini 1.5 Flash</string>
-    <string name="label_model_gemini_1_5_flash_001">Initial stable version of Gemini 1.5 Flash</string>
-    <string name="label_model_gemini_1_5_pro_002">Latest stable version of Gemini 1.5 Pro</string>
-    <string name="label_model_gemini_1_5_pro_001">Initial stable version of Gemini 1.5 Pro</string>
+    <string name="label_model_gemini_2_0">Gemini 2.0 Flash</string>
+    <string name="label_model_gemini_2_0_flash_lite">Gemini 2.0 Flash Lite</string>
+    <string name="label_model_gemini_1_5_pro">Gemini 1.5 Pro</string>
+    <string name="label_model_gemini_1_5_flash">Gemini 1.5 Flash</string>
     <string name="label_myself">Me</string>
     <string name="label_no_items">No items found</string>
 
@@ -45,7 +44,7 @@
     <string name="settings_temperature">Temperature</string>
     <string name="settings_topK">Top-K</string>
     <string name="settings_topP">Top-P</string>
-    <string name="settings_max_tokens">Max Tokens</string>
+    <string name="settings_max_tokens">Max. Tokens</string>
 
     <string name="time_stats">%1$s s</string>
     <string name="char_stats">%1$s chars</string>

@@ -27,11 +27,11 @@ import com.dailystudio.gemini.core.model.UiStatus
 import com.dailystudio.gemini.utils.CustomFontTagHandler
 import com.dailystudio.gemini.utils.TimeStats
 import com.dailystudio.gemini.utils.UiHelper
-import com.dailystudio.gemini.utils.registerActionBar
 import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.devbricksx.fragment.AbsPermissionsFragment
+import com.dailystudio.devbricksx.utils.addSoftKeyboardChangesListener
+import com.dailystudio.devbricksx.utils.registerActionBar
 import com.dailystudio.gemini.core.LT_MODEL
-import com.dailystudio.gemini.utils.addSoftKeyboardChangesListener
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import io.noties.markwon.ext.tables.TablePlugin
