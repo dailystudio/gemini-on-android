@@ -67,11 +67,33 @@ class EngineInfoFragment:DevBricksFragment() {
             else -> null
         }
 
-        infoView?.text = nameOfEngine?.let {
-            getString(
-                coreR.string.engine_info,
-                nameOfEngine)
-        } ?: ""
+        val nameOfModel = when (engine) {
+            AIEngine.GEMINI.toString(),
+            AIEngine.VERTEX.toString(),
+            AIEngine.MEDIA_PIPE.toString() -> {
+                when (model) {
+                    "gemini-2.0-flash" -> getString(coreR.string.label_model_gemini_2_0_flash)
+                    "gemini-2.0-flash-lite" -> getString(coreR.string.label_model_gemini_2_0_flash_lite)
+                    "gemini-1.5-pro" -> getString(coreR.string.label_model_gemini_2_0_flash)
+                    "gemini-1.5-flash" -> getString(coreR.string.label_model_gemini_2_0_flash)
+                    "gemma-2-2b" -> getString(coreR.string.label_model_gemma_2)
+                    "gemma-3-1b" -> getString(coreR.string.label_model_gemma_3)
+                    else -> null
+                }
+            }
+            else -> null
+        }
+
+        infoView?.text = buildString {
+            nameOfEngine?.let {
+                append(getString(coreR.string.engine_info, it))
+            }
+            nameOfModel?.let {
+                append(" (")
+                append(it)
+                append(")")
+            }
+        }
     }
 
 

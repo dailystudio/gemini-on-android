@@ -33,7 +33,16 @@ enum class AIEngine: Serializable {
     GEMINI,
     GEMINI_NANO,
     VERTEX,
-    MEDIA_PIPE
+    MEDIA_PIPE;
+
+    fun displayName(): String {
+        return when (this) {
+            GEMINI -> "Gemini"
+            VERTEX -> "Vertex"
+            GEMINI_NANO -> "Gemini Nano"
+            MEDIA_PIPE -> "MediaPipe"
+        }
+    }
 }
 
 enum class UiStatus {
@@ -223,7 +232,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                 append("<font color='${colorHuman}'><b>${roleSelf}:</b> ")
                 append("$prompt</font>")
                 append("\n")
-                append("<font color='${colorAI}'><b>${engine.value}:</b> ")
+                append("<font color='${colorAI}'><b>${engine.value.displayName()}:</b> ")
                 append("\n")
             }).commitResponses()
         }

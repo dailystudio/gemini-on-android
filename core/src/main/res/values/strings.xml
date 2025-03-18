@@ -31,7 +31,7 @@
     <string name="label_engine_vertex">Firebase Vertex</string>
     <string name="label_engine_gemini_nano">Gemini Nano</string>
     <string name="label_media_pipe">MediaPipe</string>
-    <string name="label_model_gemini_2_0">Gemini 2.0 Flash</string>
+    <string name="label_model_gemini_2_0_flash">Gemini 2.0 Flash</string>
     <string name="label_model_gemini_2_0_flash_lite">Gemini 2.0 Flash Lite</string>
     <string name="label_model_gemini_1_5_pro">Gemini 1.5 Pro</string>
     <string name="label_model_gemini_1_5_flash">Gemini 1.5 Flash</string>
