@@ -35,7 +35,8 @@
             android:id="@+id/settings_fragment"
             android:name="com.dailystudio.gemini.fragment.SettingsFragment"
             android:layout_below="@id/illustration"
-            android:layout_margin="@dimen/default_content_padding"
+            android:layout_marginTop="@dimen/default_content_padding"
+            android:layout_marginBottom="@dimen/default_content_padding"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 

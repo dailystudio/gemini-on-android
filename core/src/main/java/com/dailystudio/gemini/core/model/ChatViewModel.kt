@@ -372,7 +372,6 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                         append(stream.text ?: "")
 
                         if (status == UiStatus.Error) {
-                            Logger.debug("error: ${stream.errorMessage}")
                             append("<font color='${colorError}'>")
                             append(stream.errorMessage?.trim())
                             append("</font>")

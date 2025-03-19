@@ -7,6 +7,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.SwitchCompat
+import com.dailystudio.devbricksx.development.LT
+import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.gemini.R
 import com.dailystudio.gemini.core.AppSettings
 import com.dailystudio.gemini.core.AppSettingsPrefs
@@ -72,7 +74,41 @@ class SettingsFragment: AbsSettingsFragment() {
             SimpleRadioSettingItem(context, AIEngine.MEDIA_PIPE.toString(), coreR.string.label_media_pipe)
         )
 
+        val currEngine = AppSettingsPrefs.instance.engine
+
+        val geminiModels = arrayOf(
+            ModelRadioSettingItem(context,
+                "gemini-2.0-flash", coreR.string.label_model_gemini_2_0_flash),
+            ModelRadioSettingItem(context,
+                "gemini-2.0-flash-lite", coreR.string.label_model_gemini_2_0_flash_lite),
+            ModelRadioSettingItem(context,
+                "gemini-1.5-pro", coreR.string.label_model_gemini_1_5_pro),
+            ModelRadioSettingItem(context,
+                "gemini-1.5-flash", coreR.string.label_model_gemini_1_5_flash),
+            ModelRadioSettingItem(context,
+                "gemma-3-27b-it", coreR.string.label_model_gemma_3_27b)
+        )
+
+        val vertexModels = arrayOf(
+            ModelRadioSettingItem(context,
+                "gemini-2.0-flash", coreR.string.label_model_gemini_2_0_flash),
+            ModelRadioSettingItem(context,
+                "gemini-2.0-flash-lite", coreR.string.label_model_gemini_2_0_flash_lite),
+            ModelRadioSettingItem(context,
+                "gemini-1.5-pro", coreR.string.label_model_gemini_1_5_pro),
+            ModelRadioSettingItem(context,
+                "gemini-1.5-flash", coreR.string.label_model_gemini_1_5_flash),
+        )
+
+        val mediaPipeModels = arrayOf(
+            ModelRadioSettingItem(context,
+                "gemma-2-2b", coreR.string.label_model_gemma_2),
+            ModelRadioSettingItem(context,
+                "gemma-3-1b", coreR.string.label_model_gemma_3),
+        )
+
         var geminiModelSettings: AbsSetting? = null
+        var vertexModelSettings: AbsSetting? = null
         var mediaPipeModelSettings: AbsSetting? = null
 
         val engineSetting = object: RadioSetting<SimpleRadioSettingItem>(
@@ -85,24 +121,38 @@ class SettingsFragment: AbsSettingsFragment() {
                 get() = AppSettingsPrefs.instance.engine
 
             override fun setSelected(selectedId: String?) {
-                selectedId?.let {
-                    AppSettingsPrefs.instance.engine = it
-                    geminiModelSettings?.enabled = geminiModelEnabled()
-                    mediaPipeModelSettings?.enabled = mediaPipeModelEnabled()
+                selectedId?.let { engine ->
+                    AppSettingsPrefs.instance.engine = engine
+                    geminiModelSettings?.enabled = geminiModelEnabled(engine)
+                    vertexModelSettings?.enabled = vertexModelEnabled(engine)
+                    mediaPipeModelSettings?.enabled = mediaPipeModelEnabled(engine)
+
+                    val model = AppSettingsPrefs.instance.model
+                    when (engine) {
+                        AIEngine.GEMINI.toString() -> {
+                            AppSettingsPrefs.instance.model =
+                                checkOrReturnValidModel(model, geminiModels)
+                            geminiModelSettings?.postInvalidate()
+                        }
+
+                        AIEngine.VERTEX.toString() -> {
+                            AppSettingsPrefs.instance.model =
+                                checkOrReturnValidModel(model, vertexModels)
+                            vertexModelSettings?.postInvalidate()
+                        }
+
+                        AIEngine.MEDIA_PIPE.toString() -> {
+                            AppSettingsPrefs.instance.model =
+                                checkOrReturnValidModel(model, mediaPipeModels)
+                            mediaPipeModelSettings?.postInvalidate()
+                        }
+
+                        else -> {}
+                    }
                 }
             }
         }
 
-        val geminiModels = arrayOf(
-            ModelRadioSettingItem(context,
-                "gemini-2.0-flash", coreR.string.label_model_gemini_2_0_flash),
-            ModelRadioSettingItem(context,
-                "gemini-2.0-flash-lite", coreR.string.label_model_gemini_2_0_flash_lite),
-            ModelRadioSettingItem(context,
-                "gemini-1.5-pro", coreR.string.label_model_gemini_1_5_pro),
-            ModelRadioSettingItem(context,
-                "gemini-1.5-flash", coreR.string.label_model_gemini_1_5_flash),
-        )
 
         geminiModelSettings = object: RadioSetting<ModelRadioSettingItem>(
             context,
@@ -110,7 +160,7 @@ class SettingsFragment: AbsSettingsFragment() {
             coreR.drawable.ic_model,
             coreR.string.settings_gemini_model,
             geminiModels,
-            geminiModelEnabled(),
+            geminiModelEnabled(currEngine),
         ) {
             override val selectedId: String?
                 get() = AppSettingsPrefs.instance.model
@@ -122,12 +172,23 @@ class SettingsFragment: AbsSettingsFragment() {
             }
         }
 
-        val mediaPipeModels = arrayOf(
-            ModelRadioSettingItem(context,
-                "gemma-2-2b", coreR.string.label_model_gemma_2),
-            ModelRadioSettingItem(context,
-                "gemma-3-1b", coreR.string.label_model_gemma_3),
-        )
+        vertexModelSettings = object: RadioSetting<ModelRadioSettingItem>(
+            context,
+            AppSettingsPrefs.PREF_MODEL,
+            coreR.drawable.ic_model,
+            coreR.string.settings_vertex_model,
+            vertexModels,
+            vertexModelEnabled(currEngine),
+        ) {
+            override val selectedId: String?
+                get() = AppSettingsPrefs.instance.model
+
+            override fun setSelected(selectedId: String?) {
+                selectedId?.let {
+                    AppSettingsPrefs.instance.model = it
+                }
+            }
+        }
 
         mediaPipeModelSettings = object: RadioSetting<ModelRadioSettingItem>(
             context,
@@ -135,7 +196,7 @@ class SettingsFragment: AbsSettingsFragment() {
             coreR.drawable.ic_model,
             coreR.string.settings_media_pipe_model,
             mediaPipeModels,
-            mediaPipeModelEnabled(),
+            mediaPipeModelEnabled(currEngine),
         ) {
             override val selectedId: String?
                 get() = AppSettingsPrefs.instance.model
@@ -293,6 +354,7 @@ class SettingsFragment: AbsSettingsFragment() {
         val arrayOfSettings: MutableList<AbsSetting> = mutableListOf(
             engineSetting,
             geminiModelSettings,
+            vertexModelSettings,
             mediaPipeModelSettings,
         )
 
@@ -307,15 +369,36 @@ class SettingsFragment: AbsSettingsFragment() {
         return arrayOfSettings.toTypedArray()
     }
 
-    private fun geminiModelEnabled(): Boolean {
-        val engine = AppSettingsPrefs.instance.engine
-
-        return (engine == AIEngine.GEMINI.toString() || engine == AIEngine.VERTEX.toString())
+    private fun geminiModelEnabled(engine: String): Boolean {
+        return (engine == AIEngine.GEMINI.toString())
     }
 
-    private fun mediaPipeModelEnabled(): Boolean {
-        val engine = AppSettingsPrefs.instance.engine
+    private fun vertexModelEnabled(engine: String): Boolean {
+        return (engine == AIEngine.VERTEX.toString())
+    }
 
+    private fun mediaPipeModelEnabled(engine: String): Boolean {
         return (engine == AIEngine.MEDIA_PIPE.toString())
     }
+
+    private fun checkOrReturnValidModel(model: String, modelSettings: Array<ModelRadioSettingItem>): String {
+        val validModels = modelSettings.map {
+            it.getId()
+        }
+
+        if (validModels.isEmpty()) {
+            return ""
+        }
+
+        Logger.debug(LT("[CHECK]"), "$model, valid = ${validModels.joinToString()}")
+        return if (model in validModels) {
+            model
+        } else {
+            validModels[0]
+        }.also {
+            Logger.debug(LT("[CHECK]"), "return $it")
+
+        }
+    }
+
 }

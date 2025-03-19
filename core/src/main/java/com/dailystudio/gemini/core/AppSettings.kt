@@ -14,8 +14,8 @@ class AppSettings(
     val debugEnabled: Boolean = false,
     @StringField("GEMINI")
     val engine: String = "GEMINI",
-    @StringField("gemini-1.5-flash-001")
-    val model: String = "gemini-1.5-flash-001",
+    @StringField("gemini-2.0-flash")
+    val model: String = "gemini-2.0-flash",
     @BooleanField(true)
     val asyncGeneration: Boolean = true,
     @FloatField(DEFAULT_TEMPERATURE)

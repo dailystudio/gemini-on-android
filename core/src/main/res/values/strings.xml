@@ -28,20 +28,22 @@
     <string name="label_pick">Pick a file</string>
     <string name="label_send">Send</string>
     <string name="label_engine_gemini">Gemini</string>
-    <string name="label_engine_vertex">Firebase Vertex</string>
+    <string name="label_engine_vertex">Vertex AI</string>
     <string name="label_engine_gemini_nano">Gemini Nano</string>
     <string name="label_media_pipe">MediaPipe</string>
     <string name="label_model_gemini_2_0_flash">Gemini 2.0 Flash</string>
     <string name="label_model_gemini_2_0_flash_lite">Gemini 2.0 Flash Lite</string>
     <string name="label_model_gemini_1_5_pro">Gemini 1.5 Pro</string>
     <string name="label_model_gemini_1_5_flash">Gemini 1.5 Flash</string>
-    <string name="label_model_gemma_2">Gemma2 2B</string>
-    <string name="label_model_gemma_3">Gemma3 1B</string>
+    <string name="label_model_gemma_2">Gemma 2 2B</string>
+    <string name="label_model_gemma_3">Gemma 3 1B</string>
+    <string name="label_model_gemma_3_27b">Gemma 3 27B</string>
     <string name="label_myself">Me</string>
     <string name="label_no_items">No items found</string>
 
     <string name="settings_ai_engine">AI Engine</string>
     <string name="settings_gemini_model">Gemini Model</string>
+    <string name="settings_vertex_model">Vertex Model</string>
     <string name="settings_media_pipe_model">MediaPipe Model</string>
     <string name="settings_async">Async Generation</string>
     <string name="settings_temperature">Temperature</string>

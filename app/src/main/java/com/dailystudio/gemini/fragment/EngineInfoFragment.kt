@@ -78,6 +78,8 @@ class EngineInfoFragment:DevBricksFragment() {
                     "gemini-1.5-flash" -> getString(coreR.string.label_model_gemini_2_0_flash)
                     "gemma-2-2b" -> getString(coreR.string.label_model_gemma_2)
                     "gemma-3-1b" -> getString(coreR.string.label_model_gemma_3)
+                    "gemma-3-27b-it" -> getString(coreR.string.label_model_gemma_3_27b
+                    )
                     else -> null
                 }
             }

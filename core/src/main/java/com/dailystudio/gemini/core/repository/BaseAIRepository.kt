@@ -101,9 +101,9 @@ abstract class BaseAIRepository(
                 Logger.error(LT_MODEL(this.javaClass.simpleName), "fail to generate: ${e.message}")
                 _generationStream.emit(
                     GenerationStream(
-                    status = Status.ERROR,
-                    errorMessage = e.message
-                )
+                        status = Status.ERROR,
+                        errorMessage = e.message
+                    )
                 )
             }
         }
@@ -116,10 +116,10 @@ abstract class BaseAIRepository(
     ) {
         _generationStream.tryEmit(
             GenerationStream(
-            text = text,
-            status = status,
-            errorMessage = errorMessage
-        )
+                text = text,
+                status = status,
+                errorMessage = errorMessage
+            )
         )
     }
 

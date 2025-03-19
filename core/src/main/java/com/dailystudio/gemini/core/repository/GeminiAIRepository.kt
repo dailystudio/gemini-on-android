@@ -37,7 +37,7 @@ class GeminiAIRepository(
                 topK = AppSettingsPrefs.instance.topK
                 topP = AppSettingsPrefs.instance.topP
                 maxOutputTokens = AppSettingsPrefs.instance.maxTokens
-            }
+            },
         )
 
         setReady(true)
@@ -60,30 +60,19 @@ class GeminiAIRepository(
     ) {
         Logger.debug("prompt: $prompt")
 
-        var status = Status.RUNNING
-        var errorMessage: String? = null
-
         model.generateContentStream(
             buildContent(prompt, fileUri, mimeType)
-        ).onCompletion {
-            status = if (it == null) {
-                Status.DONE
-            } else {
-                Logger.error("generate stream failed: ${it.message}")
-
-                errorMessage = it.message
-                Status.ERROR
+        ).onCompletion { throwable ->
+            if (throwable == null) {
+                updateGenerationStream(
+                    "",
+                    Status.DONE,
+                )
             }
-            updateGenerationStream(
-                "",
-                status,
-                errorMessage
-            )
         }.collect { response ->
             updateGenerationStream(
                 response.text,
-                status,
-                errorMessage
+                Status.RUNNING,
             )
         }
 
@@ -92,7 +81,7 @@ class GeminiAIRepository(
     private fun buildContent(prompt: String,
                              fileUri: String?,
                              mimeType: String?): Content {
-        return content {
+        return content("user") {
             if (fileUri != null && !mimeType.isNullOrBlank()) {
                 if (mimeType.contains("image")) {
                     val bitmap = ContentUtils.uriToBitmap(
