@@ -58,7 +58,6 @@
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/user_input"
                         android:gravity="top|start"
-                        android:inputType="textUri"
                         android:maxLines="1"
                         android:textColor="@color/primaryColor"
                         android:paddingStart="@dimen/chat_test_input_padding_start"

@@ -80,6 +80,7 @@ data class UiState(
         Logger.debug(Constants.LT_RESP, "fullResp = [$fullResp], text = [$text]")
         return copy(
             fullResp = text ?: "",
+            countOfChar = 0
         )
     }
 
@@ -365,6 +366,8 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                                     fullResp = "",
                                 )
                             }
+                        } else {
+                            return@collect
                         }
                     }
 
@@ -378,7 +381,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                         }
                     }
 
-                    _uiState.update { currentState ->
+                _uiState.update { currentState ->
                         currentState.copy(
                             engine = engine.value,
                             status = status,

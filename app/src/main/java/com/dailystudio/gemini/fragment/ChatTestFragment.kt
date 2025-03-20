@@ -31,6 +31,7 @@ import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.devbricksx.fragment.AbsPermissionsFragment
 import com.dailystudio.devbricksx.utils.addSoftKeyboardChangesListener
 import com.dailystudio.devbricksx.utils.registerActionBar
+import com.dailystudio.gemini.core.Constants
 import com.dailystudio.gemini.core.LT_MODEL
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
@@ -38,7 +39,6 @@ import io.noties.markwon.ext.tables.TablePlugin
 import io.noties.markwon.html.HtmlPlugin
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-
 
 class ChatTestFragment: AbsPermissionsFragment() {
 
@@ -89,8 +89,9 @@ class ChatTestFragment: AbsPermissionsFragment() {
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 chatViewModel.uiState.collectLatest { uiState ->
-                    Logger.debug(LT_MODEL(),"new state collected = $uiState")
+                    Logger.debug(LT_MODEL(),"[${uiState.engine}]: status = ${uiState.status}")
                     Logger.debug(LT_MODEL(),"[${uiState.engine}]: resp text = ${uiState.fullResp}")
+                    Logger.debug(Constants.LT_RESP,"countOfChar = ${uiState.countOfChar}")
 
                     checkSendAvailability()
 
@@ -134,7 +135,6 @@ class ChatTestFragment: AbsPermissionsFragment() {
             checkSendAvailability()
         }
         userInput?.addSoftKeyboardChangesListener { _, showKeyboard ->
-            Logger.debug("[STB] showKeyboard = $showKeyboard ")
             scrollTextToBottom(true)
         }
 
@@ -182,11 +182,6 @@ class ChatTestFragment: AbsPermissionsFragment() {
         syncLayout(false)
 
         activity?.registerActionBar(view, R.id.topAppBar)
-    }
-
-    override fun onPause() {
-        super.onPause()
-//        chatViewModel.clearRespText()
     }
 
     private fun startStats() {
@@ -251,8 +246,6 @@ class ChatTestFragment: AbsPermissionsFragment() {
         }
 
     private fun checkSendAvailability() {
-        Logger.debug("checkSendAvailability: ${chatViewModel.uiState.value} ")
-
         val hasContent = !userInput?.text.isNullOrEmpty()
         val modelReady = chatViewModel.uiState.value.status != UiStatus.Preparing
         val notRunning = chatViewModel.uiState.value.status != UiStatus.InProgress
@@ -311,10 +304,6 @@ class ChatTestFragment: AbsPermissionsFragment() {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu_main, menu)
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu) {
-        super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

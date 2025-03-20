@@ -3,6 +3,7 @@ package com.dailystudio.gemini.core.repository
 import android.content.Context
 import com.dailystudio.gemini.core.utils.StatsUtils
 import com.dailystudio.devbricksx.development.Logger
+import com.dailystudio.gemini.core.AppSettings
 import com.dailystudio.gemini.core.AppSettingsPrefs
 import com.dailystudio.gemini.core.Constants.LT_MODEL_GEMMA
 import com.dailystudio.gemini.core.utils.ContentUtils
@@ -61,6 +62,7 @@ class MediaPipeAIRepository(
                         else -> setMaxTokens(1024)
                     }
                 }
+                .setMaxTopK(AppSettings.MAX_TOP_K)
                 .build()
 
             llmInference = LlmInference.createFromOptions(context, inferenceOptions)
