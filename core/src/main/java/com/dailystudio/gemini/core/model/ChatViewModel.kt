@@ -17,9 +17,10 @@ import com.dailystudio.gemini.core.repository.GeminiNanoRepository
 import com.dailystudio.gemini.core.repository.MediaPipeAIRepository
 import com.dailystudio.gemini.core.repository.Status
 import com.dailystudio.gemini.core.utils.DotsLoader
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -124,7 +125,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
     )
 
     private var repo: BaseAIRepository? = null
-    private var repoJob: Job? = null
+    private var repoScope: CoroutineScope? = null
 
     private var settingChanges: MutableSet<String> = mutableSetOf()
     private var _settingsChanged: MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -247,12 +248,14 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
 
     private fun stopGeneration() {
         dotsLoader.stopLoadingDots()
-        _uiState.update {
-            it.appendResponse(buildString {
-                append("</font>")
-                append("\n")
-                append("\n")
-            }).commitResponses()
+        if (_uiState.value.fullResp.isNotEmpty()) {
+            _uiState.update {
+                it.appendResponse(buildString {
+                    append("</font>")
+                    append("\n")
+                    append("\n")
+                }).commitResponses()
+            }
         }
     }
 
@@ -263,7 +266,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
     ) {
         val repo = repo ?: return
 
-        viewModelScope.launch {
+        repoScope?.launch {
             startGeneration(prompt, fileUri, mimeType)
 
             val result = repo.generate(prompt, fileUri, mimeType)
@@ -290,7 +293,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
     ) {
         val repo = repo ?: return
 
-        viewModelScope.launch {
+        repoScope?.launch {
             startGeneration(prompt, fileUri, mimeType)
 
             repo.generateAsync(prompt, fileUri, mimeType)
@@ -319,7 +322,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
         Logger.debug(LT_MODEL(engine.value.name),"prepare repo in ${Thread.currentThread().name}")
 
         repo?.let {
-            repoJob = createRepoJob(it)
+            repoScope = createRepoScope(it)
             it.checkAndPrepare()
         }
     }
@@ -327,15 +330,18 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
     private suspend fun closeRepo() = withContext(Dispatchers.IO) {
         Logger.debug(LT_MODEL(engine.value.name), "close repo in ${Thread.currentThread().name}")
 
+        stopGeneration()
         repo?.close()
-        repoJob?.cancelAndJoin()
+        repoScope?.cancel()
     }
 
-    private fun createRepoJob(repo: BaseAIRepository): Job? {
+    private fun createRepoScope(repo: BaseAIRepository): CoroutineScope {
         Logger.debug(LT_MODEL(engine.value.name), "create job for repo: $repo")
 
         return repo.let {
-            viewModelScope.launch {
+            val scope = CoroutineScope(viewModelScope.coroutineContext + Job())
+
+            scope.launch {
                 it.ready.collect { ready ->
                     Logger.debug(LT_MODEL(engine.value.name), "change ready: $ready")
 
@@ -348,7 +354,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                 }
             }
 
-            viewModelScope.launch {
+            scope.launch {
                 it.generationStream.collect { stream ->
                     val status = when (stream.status) {
                         Status.DONE -> UiStatus.Done
@@ -396,6 +402,8 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                     }
                 }
             }
+
+            scope
         }
     }
 

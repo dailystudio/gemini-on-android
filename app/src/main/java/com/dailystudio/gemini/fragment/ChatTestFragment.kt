@@ -31,6 +31,7 @@ import com.dailystudio.devbricksx.development.Logger
 import com.dailystudio.devbricksx.fragment.AbsPermissionsFragment
 import com.dailystudio.devbricksx.utils.addSoftKeyboardChangesListener
 import com.dailystudio.devbricksx.utils.registerActionBar
+import com.dailystudio.gemini.core.AppSettings
 import com.dailystudio.gemini.core.Constants
 import com.dailystudio.gemini.core.LT_MODEL
 import io.noties.markwon.Markwon
@@ -107,6 +108,7 @@ class ChatTestFragment: AbsPermissionsFragment() {
                         coreR.string.char_stats,
                         uiState.countOfChar.toString()
                     )
+
                     tokenStatsView?.text = getString(
                         coreR.string.token_stats,
                         (uiState.countOfChar/4).toString()
@@ -115,8 +117,17 @@ class ChatTestFragment: AbsPermissionsFragment() {
             }
         }
 
-        setHasOptionsMenu(true)
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                AppSettingsPrefs.instance.prefsChanges.collectLatest {
+                    if (it.prefKey == AppSettingsPrefs.PREF_DEBUG_ENABLED) {
+                        syncStatsViews()
+                    }
+                }
+            }
+        }
 
+        setHasOptionsMenu(true)
     }
 
     override fun onCreateView(
