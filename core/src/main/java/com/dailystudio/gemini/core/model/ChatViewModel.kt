@@ -331,7 +331,19 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
         Logger.debug(LT_MODEL(engine.value.name), "close repo in ${Thread.currentThread().name}")
 
         stopGeneration()
-        repo?.close()
+        try {
+            repo?.close()
+        } catch (e: Exception) {
+            Logger.error(LT_MODEL(engine.value.name), "fail to close repo: ${e.message}")
+        }
+
+        _uiState.update {currentState ->
+            currentState.copy(
+                engine = engine.value,
+                status = UiStatus.Done
+            )
+        }
+
         repoScope?.cancel()
     }
 
@@ -387,7 +399,7 @@ class ChatViewModel(application: Application): AndroidViewModel(application) {
                         }
                     }
 
-                _uiState.update { currentState ->
+                    _uiState.update { currentState ->
                         currentState.copy(
                             engine = engine.value,
                             status = status,
